@@ -995,9 +995,12 @@ if (location.search.indexOf('demo=1') > -1) {
     sending = true;
     sendBtn.disabled = true;
     sendBtn.textContent = '发送中…';
+    // 回跳地址：兼容 GitHub Pages 子路径部署（如 /MediSubmit/）
+    var redirectTo = window.location.origin + window.location.pathname;
+    redirectTo = redirectTo.replace(/\/index\.html$/i, '/');
     sb.auth.signInWithOtp({
       email: email,
-      options: { shouldCreateUser: true, emailRedirectTo: window.location.origin }
+      options: { shouldCreateUser: true, emailRedirectTo: redirectTo }
     }).then(function (r) {
       if (r.error) { lmMsg('发送失败：' + r.error.message, false); sendBtn.disabled = false; sendBtn.textContent = '发送登录链接'; return; }
       lmMsg('📧 登录链接已发送至 ' + email + '，请打开邮件点击链接登录（如未收到请检查垃圾箱）', true);
