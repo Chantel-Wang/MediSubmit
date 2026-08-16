@@ -227,28 +227,7 @@
     color: #c0392b; font-size: 0.78rem; font-weight: 600; border-radius: 8px; cursor: pointer; font-family: inherit;
   }
   .lm-menu-item:hover { background: rgba(192,57,43,0.08); }
-  .lm-menu-item.green { color: #4a6746; }
-  .lm-menu-item.green:hover { background: rgba(79,122,74,0.1); }
-  .lm-divider {
-    display: flex; align-items: center; gap: 10px; margin: 16px 0 12px;
-    color: #8a9f86; font-size: 0.72rem;
-  }
-  .lm-divider::before, .lm-divider::after {
-    content: ''; flex: 1; height: 1px; background: rgba(125,158,119,0.3);
-  }
-  .lm-sync-title { font-size: 0.82rem; font-weight: 700; color: #4a6746; margin-bottom: 4px; }
-  .lm-sync-hint { font-size: 0.7rem; color: #6b7d66; line-height: 1.6; margin-bottom: 8px; }
-  .lm-sync-code {
-    margin: 14px auto 6px; width: fit-content; min-width: 200px; text-align: center;
-    font-size: 1.9rem; font-weight: 800; letter-spacing: 10px; padding: 10px 16px;
-    color: #2f5c3a; background: rgba(79,122,74,0.1); border: 2px dashed rgba(79,122,74,0.5);
-    border-radius: 14px; font-family: Consolas, Menlo, monospace;
-  }
-  .lm-sync-timer { text-align: center; font-size: 0.72rem; color: #8a5fb8; margin-bottom: 6px; }
-  .lm-sync-note { text-align: center; font-size: 0.7rem; color: #8a9f86; margin-bottom: 14px; line-height: 1.6; }
-  .lm-done { width: 100%; padding: 12px; border-radius: 11px; border: 1px solid rgba(79,122,74,0.45);
-    background: #fff; color: #4f7a4a; font-size: 0.9rem; font-weight: 700; cursor: pointer; font-family: inherit; }
-  .lm-done:hover { background: rgba(79,122,74,0.08); }
+  .lm-auto-close { text-align: center; font-size: 0.72rem; color: #8a9f86; margin-top: 10px; }
 
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -277,26 +256,14 @@
       </div>
       <div class="lm-msg" id="lmMsg"></div>
       <div class="lm-tip">📧 链接与验证码已发送到邮箱：点链接登录，或在电脑网页上输入邮件中的验证码登录；如未收到请检查垃圾箱。</div>
-      <div class="lm-divider">或</div>
-      <div class="lm-sync">
-        <div class="lm-sync-title">📱 用手机上的同步码登录</div>
-        <div class="lm-sync-hint">在手机上点邮件链接登录后，网页会显示 6 位同步码；在任意另一台设备输入该同步码即可同步登录。</div>
-        <div class="lm-row">
-          <input class="lm-inp" id="lmSyncCode" placeholder="输入 6 位同步码" maxlength="6" autocomplete="one-time-code" style="letter-spacing:4px; text-transform:uppercase;">
-          <button class="lm-code" id="lmSyncBtn">同步登录</button>
-        </div>
-        <div class="lm-msg" id="lmSyncMsg"></div>
-      </div>
       <button class="lm-skip" id="lmSkip">暂不登录，先逛逛 →</button>
     </div>
-    <div id="lmBodySync" style="display:none">
+    <div id="lmBodySuccess" style="display:none">
       <div class="lm-logo">✅</div>
       <h2>登录成功</h2>
-      <div class="lm-sub">把下面的同步码填到另一台设备的登录框，即可完成同步登录（手机可留在本页）</div>
-      <div class="lm-sync-code" id="lmSyncCodeShow">······</div>
-      <div class="lm-sync-timer" id="lmSyncTimer"></div>
-      <div class="lm-sync-note">⏱ 同步码约 5 分钟有效、仅可使用一次；过期后会自动刷新</div>
-      <button class="lm-done" id="lmDoneBtn">完 成</button>
+      <div class="lm-sub">AI 语义推荐已解锁，现在就能直接使用。</div>
+      <button class="lm-btn" id="lmDoneBtn">完成，开始使用</button>
+      <div class="lm-auto-close" id="lmAutoCloseTip">2 秒后自动关闭</div>
     </div>
   </div>
 </div>
@@ -307,7 +274,6 @@
         <button class="lm-user" id="lmUserBtn">👤 登录</button>
         <div class="lm-menu" id="lmMenu">
           <div class="lm-menu-mail" id="lmMenuMail"></div>
-          <button class="lm-menu-item green" id="lmSyncMenuItem">📱 显示同步码</button>
           <button class="lm-menu-item" id="lmLogoutBtn">🚪 退出登录</button>
         </div>
       </span>
@@ -1004,18 +970,11 @@ if (location.search.indexOf('demo=1') > -1) {
   var userEmail = '';
   var loggedIn = false;
   var accessToken = '';
-  var syncTimer = null;
-  var suppressSyncView = false;
+  var successTimer = null;
 
   function lmMsg(txt, ok) {
     msgEl.className = 'lm-msg ' + (ok ? 'ok' : 'err');
     msgEl.textContent = txt;
-  }
-  function syncMsg(txt, ok) {
-    var el = document.getElementById('lmSyncMsg');
-    if (!el) return;
-    el.className = 'lm-msg ' + (ok ? 'ok' : 'err');
-    el.textContent = txt;
   }
   function validEmail(v) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v || '').trim());
@@ -1039,7 +998,7 @@ if (location.search.indexOf('demo=1') > -1) {
   function hideMenu() { if (menu) menu.classList.remove('show'); }
   function showLoginBody() {
     var a = document.getElementById('lmBodyLogin');
-    var b = document.getElementById('lmBodySync');
+    var b = document.getElementById('lmBodySuccess');
     if (a) a.style.display = '';
     if (b) b.style.display = 'none';
   }
@@ -1050,49 +1009,22 @@ if (location.search.indexOf('demo=1') > -1) {
     setTimeout(function () { emailEl.focus(); }, 60);
   }
   function hideLogin() { mask.classList.remove('show'); }
-  function clearSyncTimer() {
-    if (syncTimer) { clearInterval(syncTimer); syncTimer = null; }
+  function clearSuccessTimer() {
+    if (successTimer) { clearTimeout(successTimer); successTimer = null; }
   }
-  function hideSyncView() {
-    clearSyncTimer();
+  function hideSuccessView() {
+    clearSuccessTimer();
     showLoginBody();
     hideLogin();
   }
-  function refreshSyncCode() {
-    clearSyncTimer();
-    var el = document.getElementById('lmSyncCodeShow');
-    var timerEl = document.getElementById('lmSyncTimer');
-    if (el) el.textContent = '获取中…';
-    if (timerEl) timerEl.textContent = '';
-    sb.auth.getSession().then(function (r) {
-      var s = r && r.data && r.data.session;
-      if (!s) { if (timerEl) timerEl.textContent = '未检测到登录会话'; return; }
-      fetch(SUPA_URL + '/functions/v1/sync-create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + s.access_token },
-        body: JSON.stringify({ refresh_token: s.refresh_token })
-      }).then(function (r2) { return r2.json(); }).then(function (d) {
-        if (!d.ok) { if (timerEl) timerEl.textContent = '获取同步码失败：' + (d.error || '未知错误'); return; }
-        if (el) el.textContent = d.code;
-        var left = Math.max(0, d.expires_in || 300);
-        if (timerEl) timerEl.textContent = '⏱ ' + left + ' 秒后过期 · 仅可使用一次';
-        syncTimer = setInterval(function () {
-          left--;
-          if (left <= 0) { clearSyncTimer(); refreshSyncCode(); return; }
-          if (timerEl) timerEl.textContent = '⏱ ' + left + ' 秒后过期 · 仅可使用一次';
-        }, 1000);
-      }).catch(function (e) {
-        if (timerEl) timerEl.textContent = '网络异常：' + (e && e.message ? e.message : e);
-      });
-    });
-  }
-  function showSyncView() {
+  function showSuccessView() {
     var a = document.getElementById('lmBodyLogin');
-    var b = document.getElementById('lmBodySync');
+    var b = document.getElementById('lmBodySuccess');
     if (a) a.style.display = 'none';
     if (b) b.style.display = 'block';
     mask.classList.add('show');
-    refreshSyncCode();
+    clearSuccessTimer();
+    successTimer = setTimeout(hideSuccessView, 2000);
   }
   window.LOGIN_API = {
     isLoggedIn: function () { return loggedIn; },
@@ -1106,7 +1038,7 @@ if (location.search.indexOf('demo=1') > -1) {
         userEmail = '';
         accessToken = '';
         hideMenu();
-        clearSyncTimer();
+        clearSuccessTimer();
         updateUi();
       }).catch(function () {});
     }
@@ -1133,17 +1065,13 @@ if (location.search.indexOf('demo=1') > -1) {
       userEmail = (session && session.user && session.user.email) || '';
       accessToken = (session && session.access_token) || '';
       hideMenu();
-      if (suppressSyncView) {
-        suppressSyncView = false;
-      } else {
-        showSyncView();
-      }
+      showSuccessView();
     } else if (event === 'SIGNED_OUT') {
       loggedIn = false;
       userEmail = '';
       accessToken = '';
       hideMenu();
-      clearSyncTimer();
+      clearSuccessTimer();
     }
     updateUi();
   });
@@ -1195,20 +1123,15 @@ if (location.search.indexOf('demo=1') > -1) {
       lmMsg('退出失败：' + (e && e.message ? e.message : e), false);
     });
   };
-  var syncMenuItem = document.getElementById('lmSyncMenuItem');
-  if (syncMenuItem) syncMenuItem.onclick = function () {
-    hideMenu();
-    if (loggedIn) showSyncView(); else showLogin();
-  };
 
   // 关闭 / 跳过 / 点击遮罩关闭
-  document.getElementById('lmClose').onclick = hideSyncView;
-  document.getElementById('lmDoneBtn').onclick = hideSyncView;
+  document.getElementById('lmClose').onclick = hideSuccessView;
+  document.getElementById('lmDoneBtn').onclick = hideSuccessView;
   document.getElementById('lmSkip').onclick = function () {
     try { sessionStorage.setItem(CFG.skipKey, '1'); } catch (e) {}
-    hideSyncView();
+    hideSuccessView();
   };
-  mask.addEventListener('click', function (e) { if (e.target === mask) hideSyncView(); });
+  mask.addEventListener('click', function (e) { if (e.target === mask) hideSuccessView(); });
 
   // 发送登录链接：Supabase 邮件包含一键登录链接
   var sending = false;
@@ -1251,7 +1174,7 @@ if (location.search.indexOf('demo=1') > -1) {
     sb.auth.verifyOtp({ email: email, token: c, type: 'email' }).then(function (r) {
       if (r.error) { lmMsg('验证失败：' + r.error.message, false); return; }
       try { sessionStorage.removeItem(CFG.skipKey); } catch (e) {}
-      // SIGNED_IN 事件会自动显示同步码并更新界面
+      // SIGNED_IN 事件会自动显示“登录成功”弹窗并更新界面
     }).catch(function (e) {
       lmMsg('验证失败：' + (e && e.message ? e.message : e), false);
     });
@@ -1259,45 +1182,6 @@ if (location.search.indexOf('demo=1') > -1) {
   document.getElementById('lmLoginBtn').onclick = doLogin;
   codeEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') doLogin(); });
   emailEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') sendBtn.click(); });
-
-  // 用手机上的 6 位同步码同步登录（电脑端）
-  function doSyncLogin() {
-    var cEl = document.getElementById('lmSyncCode');
-    var c = String(cEl && cEl.value || '').trim().toUpperCase();
-    if (!/^[A-Z2-9]{6}$/.test(c)) { syncMsg('请输入 6 位同步码（大写字母和数字 2-9）', false); return; }
-    var bEl = document.getElementById('lmSyncBtn');
-    if (bEl) { bEl.disabled = true; bEl.textContent = '同步中…'; }
-    fetch(SUPA_URL + '/functions/v1/sync-claim', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ code: c })
-    }).then(function (r) { return r.json(); }).then(function (d) {
-      if (!d.ok) { syncMsg('同步登录失败：' + (d.error || '未知错误'), false); return; }
-      suppressSyncView = true;
-      var applySession = function (r2) {
-        if (r2.error) { syncMsg('会话恢复失败：' + r2.error.message, false); return; }
-        hideSyncView();
-        if (cEl) cEl.value = '';
-      };
-      if (d.session && d.session.access_token) {
-        return sb.auth.setSession({
-          access_token: d.session.access_token,
-          refresh_token: d.session.refresh_token || ''
-        }).then(applySession);
-      }
-      if (d.refresh_token) {
-        return sb.auth.refreshSession({ refresh_token: d.refresh_token }).then(applySession);
-      }
-      syncMsg('服务器返回缺少会话信息，请重试', false);
-    }).catch(function (e) {
-      syncMsg('网络异常：' + (e && e.message ? e.message : e), false);
-    }).finally(function () {
-      if (bEl) { bEl.disabled = false; bEl.textContent = '同步登录'; }
-    });
-  }
-  document.getElementById('lmSyncBtn').onclick = doSyncLogin;
-  var syncCodeEl = document.getElementById('lmSyncCode');
-  if (syncCodeEl) syncCodeEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') doSyncLogin(); });
 
   updateUi();
 })();
