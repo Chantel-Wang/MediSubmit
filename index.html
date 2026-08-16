@@ -1274,11 +1274,21 @@ if (location.search.indexOf('demo=1') > -1) {
     }).then(function (r) { return r.json(); }).then(function (d) {
       if (!d.ok) { syncMsg('同步登录失败：' + (d.error || '未知错误'), false); return; }
       suppressSyncView = true;
-      return sb.auth.refreshSession({ refresh_token: d.refresh_token }).then(function (r2) {
+      var applySession = function (r2) {
         if (r2.error) { syncMsg('会话恢复失败：' + r2.error.message, false); return; }
         hideSyncView();
         if (cEl) cEl.value = '';
-      });
+      };
+      if (d.session && d.session.access_token) {
+        return sb.auth.setSession({
+          access_token: d.session.access_token,
+          refresh_token: d.session.refresh_token || ''
+        }).then(applySession);
+      }
+      if (d.refresh_token) {
+        return sb.auth.refreshSession({ refresh_token: d.refresh_token }).then(applySession);
+      }
+      syncMsg('服务器返回缺少会话信息，请重试', false);
     }).catch(function (e) {
       syncMsg('网络异常：' + (e && e.message ? e.message : e), false);
     }).finally(function () {
