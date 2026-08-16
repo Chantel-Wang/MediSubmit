@@ -841,7 +841,11 @@ function aiRun() {
     }).join('');
     if (window.DEMO) document.title = 'READY';
   }).catch(function (e) {
-    aiErr(aBox, '无法连接本地 AI 服务：' + esc(e.message) + '<br>请先双击「启动测试.cmd」启动服务。');
+    if (location.protocol === 'file:') {
+      aiErr(aBox, '无法连接本地 AI 服务：' + esc(e.message) + '<br>请先双击「启动测试.cmd」启动服务。');
+    } else {
+      aiErr(aBox, '线上版 AI 云端后端尚未接入：' + esc(e.message) + '<br>该功能正在开发中，敬请期待。');
+    }
     if (window.DEMO) document.title = 'ERROR';
   }).finally(function () {
     btn.disabled = false;
