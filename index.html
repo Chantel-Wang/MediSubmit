@@ -1,0 +1,1019 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>医药科研投稿助手</title>
+<style>
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Segoe UI", sans-serif;
+    color: #24301f;
+    background:
+      radial-gradient(ellipse at 80% 10%, rgba(168,199,160,0.5), transparent 36%),
+      radial-gradient(ellipse at 12% 88%, rgba(125,158,119,0.22), transparent 40%),
+      linear-gradient(180deg, #f8f5ec 0%, #e9efe0 48%, #d6e2cb 100%);
+    min-height: 100vh;
+  }
+  .wrap { width: min(1280px, calc(100% - 32px)); margin: 0 auto; padding: 26px 0 60px; }
+  .head { margin-bottom: 18px; }
+  .head h1 { font-size: 1.5rem; font-weight: 800; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .head .badge { font-size: 0.72rem; color: #fff; background: linear-gradient(135deg, #7d9e77, #5f7f5a); border-radius: 999px; padding: 3px 12px; font-weight: 700; }
+  .head p { color: #8a9f86; font-size: 0.85rem; margin-top: 6px; line-height: 1.7; }
+  .head .warn { display: inline-block; margin-top: 8px; font-size: 0.75rem; color: #a2741f; background: rgba(255,248,224,0.9); border: 1px solid rgba(210,180,90,0.5); padding: 5px 12px; border-radius: 999px; }
+  .layout { display: grid; grid-template-columns: 340px 1fr; gap: 16px; align-items: start; }
+
+  .side { border-radius: 20px; padding: 16px; background: linear-gradient(145deg, rgba(255,255,255,0.55), rgba(255,255,255,0.12)), rgba(255,255,255,0.24); border: 1px solid rgba(255,255,255,0.6); box-shadow: 0 14px 34px rgba(64,84,55,0.12); backdrop-filter: blur(16px); position: sticky; top: 16px; }
+  .side h3 { font-size: 0.95rem; margin-bottom: 8px; }
+  .side .group { margin-bottom: 10px; }
+  .side .group .gt { font-size: 0.78rem; font-weight: 700; color: #8a9f86; margin-bottom: 6px; }
+  .side input[type="search"] { width: 100%; padding: 7px 12px; border-radius: 999px; border: 1px solid rgba(125,158,119,0.35); background: rgba(255,255,255,0.7); font-size: 0.85rem; }
+  .side .chk { display: flex; align-items: center; gap: 6px; font-size: 0.82rem; padding: 3px 0; color: #4a5a45; cursor: pointer; }
+  .side .qrow { display: flex; gap: 6px; flex-wrap: wrap; }
+  .side .qrow .chk { padding: 4px 0; }
+  .side .range { display: flex; gap: 6px; align-items: center; font-size: 0.78rem; color: #6f8069; }
+  .side .range input { width: 62px; padding: 5px 8px; border-radius: 8px; border: 1px solid rgba(125,158,119,0.35); background: rgba(255,255,255,0.7); }
+  .side .chips { display: flex; flex-wrap: wrap; gap: 5px; }
+  .side .catsel { width: 100%; padding: 7px 10px; border-radius: 10px; border: 1px solid rgba(125,158,119,0.35); background: rgba(255,255,255,0.7); font-size: 0.78rem; font-family: inherit; color: #4a5a45; }
+  .side .chip { padding: 4px 9px; border-radius: 999px; font-size: 0.7rem; font-weight: 600; cursor: pointer; background: rgba(255,255,255,0.5); border: 1px solid rgba(125,158,119,0.35); color: #4a6746; transition: all 0.2s; }
+  .side .chip.on { background: linear-gradient(135deg, #7d9e77, #5f7f5a); color: #fff; border-color: transparent; }
+  .side .reset { width: 100%; margin-top: 6px; padding: 8px; border-radius: 999px; border: 1px solid rgba(125,158,119,0.4); background: rgba(255,255,255,0.5); color: #4a6746; font-size: 0.8rem; font-weight: 700; cursor: pointer; }
+
+  .main { min-width: 0; }
+  .match-panel { border-radius: 20px; padding: 18px; margin-bottom: 16px; background: linear-gradient(145deg, rgba(255,255,255,0.6), rgba(255,255,255,0.16)), rgba(255,255,255,0.26); border: 1px solid rgba(255,255,255,0.65); box-shadow: 0 14px 34px rgba(64,84,55,0.12); }
+  .match-panel h3 { font-size: 1rem; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .match-panel textarea { width: 100%; min-height: 110px; padding: 12px; border-radius: 14px; border: 1px solid rgba(125,158,119,0.35); background: rgba(255,255,255,0.75); font-size: 0.85rem; line-height: 1.7; font-family: inherit; resize: vertical; }
+  .clear-row { display: flex; justify-content: flex-end; margin-top: 6px; }
+  .clear-btn-sm {
+    padding: 3px 10px; border-radius: 999px; border: 1px solid rgba(125,158,119,0.4);
+    background: rgba(255,255,255,0.7); font-size: 0.68rem; color: #7d9279; cursor: pointer; font-family: inherit;
+  }
+  .clear-btn-sm:hover { background: #e8f0e5; color: #4f7a4a; }
+  .ai-time { font-size: 0.76rem; color: #8a9f86; white-space: nowrap; }
+  .ai-lock { font-size: 0.72rem; color: #8a5fb8; background: rgba(106,77,158,0.1); border: 1px dashed rgba(106,77,158,0.4); border-radius: 999px; padding: 4px 10px; white-space: nowrap; }
+  .ai-lock.on { color: #3d8b50; background: rgba(61,139,80,0.1); border-color: rgba(61,139,80,0.4); }
+  .btn.ai-main.locked { opacity: .7; filter: saturate(.75); }
+  .lm-benefit { margin: -10px 0 16px; padding: 9px 12px; border-radius: 10px; background: rgba(106,77,158,0.08); border: 1px dashed rgba(106,77,158,0.35); font-size: 0.76rem; color: #5c4a8a; line-height: 1.7; text-align: center; }
+  .match-panel .btn-row { display: flex; gap: 10px; margin-top: 10px; align-items: center; flex-wrap: wrap; }
+  .match-panel .btn { padding: 9px 22px; border-radius: 999px; border: none; cursor: pointer; font-size: 0.88rem; font-weight: 700; background: linear-gradient(135deg, #7d9e77, #5f7f5a); color: #fff; box-shadow: 0 10px 22px rgba(125,158,119,0.32); font-family: inherit; }
+  .toolbar .btn { flex: 1 1 0; min-width: 150px; padding: 11px 14px; border-radius: 999px; border: 1px solid rgba(79,122,74,0.45); background: rgba(255,255,255,0.75); font-size: 0.82rem; font-weight: 700; cursor: pointer; color: #4f7a4a; font-family: inherit; text-align: center; }
+  .toolbar .btn.on { background: #4f7a4a; color: #fff; border-color: #4f7a4a; }
+  .prescreen { margin-top: 12px; border-radius: 16px; background: rgba(255,255,255,0.5); border: 1px dashed rgba(79,122,74,0.45); overflow: hidden; }
+  .prescreen-head { padding: 10px 14px; font-size: 0.82rem; font-weight: 700; color: #3d5c39; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+  .prescreen-head .ps-meta { font-size: 0.72rem; font-weight: 400; color: #6f8069; }
+  .prescreen-head .ps-arrow { margin-left: auto; transition: transform .2s; }
+  .prescreen.collapsed .ps-arrow { transform: rotate(-90deg); }
+  .prescreen-body { max-height: 340px; overflow-y: auto; padding: 0 12px 12px; }
+  .prescreen.collapsed .prescreen-body { display: none; }
+  .ps-row { display: flex; align-items: center; gap: 8px; padding: 5px 4px; font-size: 0.75rem; border-bottom: 1px dashed rgba(125,158,119,0.25); }
+  .ps-row:last-child { border-bottom: none; }
+  .ps-idx { color: #8a9f86; font-weight: 700; width: 22px; }
+  .ps-name { font-weight: 600; color: #33422f; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ps-if { color: #6f8069; }
+  .ps-score { color: #c0392b; font-weight: 700; }
+  .ps-hit { color: #7d9279; font-size: 0.68rem; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .match-panel .hint { font-size: 0.76rem; color: #8a9f86; width: 100%; }
+  .result-box { margin-top: 12px; }
+  .result-box .r-item { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 14px; background: rgba(255,255,255,0.55); border: 1px solid rgba(255,255,255,0.7); margin-bottom: 8px; }
+  .result-box .r-idx { flex: none; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(135deg, #7d9e77, #5f7f5a); color: #fff; font-size: 0.78rem; font-weight: 700; }
+  .result-box .r-name { font-weight: 700; font-size: 0.92rem; }
+  .result-box .r-meta { font-size: 0.76rem; color: #6f8069; }
+  .result-box .r-score { margin-left: auto; text-align: right; font-size: 0.8rem; font-weight: 800; color: #4a6746; white-space: nowrap; }
+  .result-box .r-reason { font-size: 0.74rem; color: #8a8a84; }
+
+  .toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 12px; }
+  .toolbar .cnt { font-size: 0.86rem; color: #6f8069; width: 100%; }
+  .toolbar select { padding: 7px 12px; border-radius: 999px; border: 1px solid rgba(125,158,119,0.35); background: rgba(255,255,255,0.7); font-size: 0.8rem; font-family: inherit; color: #4a5a45; }
+  .jlist { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  .pager { display: flex; align-items: center; gap: 6px; margin-top: 14px; flex-wrap: wrap; justify-content: center; }
+  .pager button {
+    min-width: 32px; height: 32px; border-radius: 9px; border: 1px solid rgba(125,158,119,0.4);
+    background: rgba(255,255,255,0.65); font-size: 0.78rem; cursor: pointer; color: #4a5a45; font-family: inherit;
+  }
+  .pager button.on { background: #4f7a4a; color: #fff; border-color: #4f7a4a; }
+  .pager button:disabled { opacity: .4; cursor: default; }
+  .jcard { border-radius: 18px; padding: 16px; background: linear-gradient(145deg, rgba(255,255,255,0.6), rgba(255,255,255,0.16)), rgba(255,255,255,0.26); border: 1px solid rgba(255,255,255,0.65); box-shadow: 0 12px 28px rgba(64,84,55,0.1); transition: transform 0.2s, box-shadow 0.2s; }
+  .jcard:hover { transform: translateY(-4px); box-shadow: 0 18px 38px rgba(64,84,55,0.18); }
+  .jcard .j-head { display: flex; align-items: flex-start; gap: 8px; flex-wrap: wrap; }
+  .jcard .j-name { font-weight: 800; font-size: 0.98rem; line-height: 1.4; }
+  .jcard .j-name a { color: inherit; text-decoration: none; }
+  .jcard .j-name a:hover { color: #2f5c3a; text-decoration: underline; }
+  .jcard .q { flex: none; font-size: 0.7rem; font-weight: 800; border-radius: 8px; padding: 3px 8px; color: #fff; }
+  .q.q1 { background: #c0504d; } .q.q2 { background: #e08e45; } .q.q3 { background: #6f9a68; } .q.q4 { background: #6f8069; }
+  .jcard .tags { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
+  .jcard .tags span { font-size: 0.7rem; padding: 3px 9px; border-radius: 999px; background: rgba(157,189,152,0.22); color: #3d5c39; }
+  .jcard .kv { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px 10px; font-size: 0.78rem; color: #55554f; }
+  .jcard .kv b { color: #4a6746; font-weight: 600; }
+  .jcard .papers { margin-top: 8px; font-size: 0.74rem; color: #6f8069; }
+  .jcard .types { margin-top: 8px; font-size: 0.74rem; color: #8a9f86; }
+  .jcard .cats { margin-top: 6px; font-size: 0.68rem; color: #7d9279; line-height: 1.5; }
+  .jcard .jlink { display: inline-block; margin-top: 8px; font-size: 0.74rem; font-weight: 700; color: #4a6746; text-decoration: none; }
+  .jcard .jlink:hover { text-decoration: underline; }
+  .result-box .r-name a { color: inherit; text-decoration: none; }
+  .result-box .r-name a:hover { color: #2f5c3a; text-decoration: underline; }
+  .empty { grid-column: 1 / -1; text-align: center; color: #8a9f86; padding: 40px 0; }
+  footer { text-align: center; color: #8a9f86; font-size: 0.76rem; margin-top: 26px; line-height: 1.8; }
+  @media (max-width: 900px) {
+    .layout { grid-template-columns: 1fr; }
+    .side { position: static; }
+    .jlist { grid-template-columns: 1fr; }
+  }
+
+
+  .btn-ghost { padding: 9px 18px; border-radius: 999px; border: 1px solid rgba(125,158,119,0.4); background: rgba(255,255,255,0.55); color: #4a6746; font-size: 0.82rem; font-weight: 700; cursor: pointer; font-family: inherit; }
+  .ai-main { background: linear-gradient(135deg, #3f6b4d, #2c543a); box-shadow: 0 10px 22px rgba(63,107,77,0.34); }
+  .ai-model { padding: 8px 12px; border-radius: 999px; border: 1px solid rgba(125,158,119,0.35); background: rgba(255,255,255,0.75); font-size: 0.8rem; font-family: inherit; color: #4a5a45; }
+  .ai-panel { margin-top: 16px; border-radius: 18px; padding: 16px; background: linear-gradient(145deg, rgba(255,255,255,0.62), rgba(255,255,255,0.18)), rgba(255,255,255,0.28); border: 1px solid rgba(255,255,255,0.68); box-shadow: 0 14px 34px rgba(64,84,55,0.1); }
+  .ai-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+  .ai-head h3 { font-size: 1rem; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .ai-meta { font-size: 0.72rem; color: #8a9f86; }
+  .badge-ai { font-size: 0.68rem; color: #fff; background: linear-gradient(135deg, #3f6b4d, #2c543a); border-radius: 999px; padding: 2px 10px; font-weight: 700; }
+  .ai-summary { font-size: 0.82rem; color: #44563f; background: rgba(125,158,119,0.12); border-radius: 12px; padding: 10px 13px; margin-bottom: 10px; line-height: 1.7; }
+  .ai-cards { display: grid; gap: 10px; }
+  .ai-card { display: flex; gap: 12px; padding: 12px 14px; border-radius: 14px; background: rgba(255,255,255,0.62); border: 1px solid rgba(125,158,119,0.3); }
+  .ai-rank { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(135deg, #7d9e77, #5f7f5a); color: #fff; font-weight: 800; font-size: 0.8rem; }
+  .ai-body { flex: 1; min-width: 0; }
+  .ai-name { font-weight: 800; font-size: 0.92rem; }
+  .ai-name a { color: inherit; text-decoration: none; }
+  .ai-name a:hover { color: #2f5c3a; text-decoration: underline; }
+  .ai-sub { font-size: 0.74rem; color: #6f8069; margin: 2px 0 6px; }
+  .ai-reason { font-size: 0.78rem; line-height: 1.7; color: #3c4f38; background: rgba(125,158,119,0.1); border-left: 3px solid #7d9e77; border-radius: 8px; padding: 8px 11px; }
+  .ai-load { display: flex; gap: 12px; }
+  .ai-load .sk { flex: 1; height: 64px; border-radius: 12px; background: linear-gradient(90deg, rgba(125,158,119,0.08), rgba(125,158,119,0.18), rgba(125,158,119,0.08)); background-size: 200% 100%; animation: sk 1.2s infinite; }
+  @keyframes sk { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+  .ai-err { border-radius: 12px; padding: 12px 14px; background: rgba(214,69,69,0.08); border: 1px solid rgba(214,69,69,0.3); color: #a0342c; font-size: 0.8rem; line-height: 1.7; }
+  .cmp { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 4px; }
+  .cmp-col { border-radius: 14px; padding: 12px; background: rgba(255,255,255,0.45); border: 1px solid rgba(125,158,119,0.22); }
+  .cmp-title { font-size: 0.82rem; font-weight: 800; color: #4a6746; margin-bottom: 8px; display: flex; justify-content: space-between; }
+  .cmp-item { display: flex; align-items: center; gap: 8px; padding: 7px 9px; border-radius: 10px; background: rgba(255,255,255,0.6); margin-bottom: 6px; font-size: 0.8rem; }
+  .cmp-item .dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: #b8c7b3; }
+  .cmp-item.both .dot { background: #5f9e6a; }
+  .cmp-item .nm { font-weight: 700; flex: 1; min-width: 0; }
+  .cmp-item .nm a { color: inherit; text-decoration: none; }
+  .cmp-item .nm a:hover { color: #2f5c3a; text-decoration: underline; }
+  .cmp-item .sc { font-size: 0.7rem; color: #8a9f86; white-space: nowrap; }
+  .cmp-idx { flex: none; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(135deg, #7d9e77, #5f7f5a); color: #fff; font-size: 0.68rem; font-weight: 800; }
+  .cmp-why { font-size: 0.7rem; color: #7a8c74; line-height: 1.6; margin: -2px 0 8px 28px; }
+  .ai-ribbon { display: inline-block; margin-left: 6px; font-size: 0.62rem; font-weight: 800; color: #fff; background: linear-gradient(135deg, #6a4d9e, #8a5fb8); border-radius: 999px; padding: 2px 9px; box-shadow: 0 4px 10px rgba(106,77,158,0.3); }
+  .jcard.ai-on { border-color: rgba(106,77,158,0.45); box-shadow: 0 12px 28px rgba(106,77,158,0.16); }
+  .ai-why-btn { margin-top: 8px; font-size: 0.72rem; color: #5c4a8a; background: rgba(106,77,158,0.08); border: 1px solid rgba(106,77,158,0.3); border-radius: 999px; padding: 4px 12px; cursor: pointer; font-family: inherit; }
+  .ai-why { display: none; margin-top: 8px; font-size: 0.76rem; line-height: 1.7; color: #3c4f38; background: rgba(106,77,158,0.07); border-left: 3px solid #8a5fb8; border-radius: 8px; padding: 8px 11px; }
+  .ai-why.open { display: block; }
+  .ai-strip { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; padding: 10px 14px; border-radius: 14px; background: rgba(106,77,158,0.08); border: 1px solid rgba(106,77,158,0.25); font-size: 0.8rem; color: #5c4a8a; }
+  .ai-strip .mini { border: 1px solid rgba(106,77,158,0.35); background: rgba(255,255,255,0.7); color: #5c4a8a; border-radius: 999px; padding: 4px 12px; font-size: 0.74rem; cursor: pointer; font-family: inherit; }
+  @media (max-width: 900px) { .cmp { grid-template-columns: 1fr; } }
+
+  /* ===== 正式登录弹窗：草稿丙 · 邮箱验证码 · 浏览 10 秒自动弹出 ===== */
+  .login-mask {
+    position: fixed; inset: 0; z-index: 999; display: none; align-items: center; justify-content: center;
+    background: rgba(35, 55, 38, 0.55); backdrop-filter: blur(6px); padding: 20px;
+  }
+  .login-mask.show { display: flex; }
+  .login-modal {
+    width: 100%; max-width: 380px; border-radius: 22px; padding: 30px 28px 22px;
+    background: linear-gradient(145deg, rgba(255,255,255,0.96), rgba(255,255,255,0.82));
+    border: 1px solid rgba(255,255,255,0.95); box-shadow: 0 24px 60px rgba(30, 50, 33, 0.38);
+    position: relative; animation: lmIn 0.35s ease;
+  }
+  @keyframes lmIn { from { opacity: 0; transform: translateY(14px) scale(0.97); } to { opacity: 1; transform: none; } }
+  .login-modal .lm-close {
+    position: absolute; top: 12px; right: 14px; border: none; background: none; font-size: 1.15rem;
+    color: #8a9f86; cursor: pointer; line-height: 1; padding: 4px; font-family: inherit;
+  }
+  .login-modal .lm-close:hover { color: #4a5a45; }
+  .login-modal .lm-logo { font-size: 2rem; text-align: center; }
+  .login-modal h2 { font-size: 1.12rem; text-align: center; color: #33422f; margin: 8px 0 4px; }
+  .login-modal .lm-sub { font-size: 0.76rem; color: #6b7d66; text-align: center; margin-bottom: 20px; line-height: 1.7; }
+  .lm-field { margin-bottom: 14px; }
+  .lm-field label { display: block; font-size: 0.76rem; color: #4a5a45; margin-bottom: 5px; font-weight: 600; }
+  .lm-row { display: flex; gap: 8px; }
+  .lm-inp {
+    flex: 1; min-width: 0; padding: 10px 13px; border-radius: 11px; font-size: 0.86rem;
+    border: 1px solid rgba(125,158,119,0.4); background: rgba(255,255,255,0.95); color: #33422f; font-family: inherit;
+  }
+  .lm-inp:focus { outline: 2px solid rgba(79,122,74,0.35); border-color: #4f7a4a; }
+  .lm-code {
+    flex: none; padding: 0 12px; border-radius: 11px; font-size: 0.76rem; font-weight: 700;
+    border: 1px solid rgba(79,122,74,0.45); background: #fff; color: #4f7a4a; cursor: pointer; font-family: inherit;
+  }
+  .lm-code:disabled { opacity: .55; cursor: default; }
+  .lm-btn {
+    width: 100%; padding: 12px; border-radius: 11px; border: none; cursor: pointer; color: #fff;
+    background: linear-gradient(135deg, #7d9e77, #5f7f5a); font-size: 0.92rem; font-weight: 700; font-family: inherit;
+    box-shadow: 0 10px 22px rgba(125,158,119,0.32);
+  }
+  .lm-btn:disabled { opacity: .6; cursor: default; }
+  .lm-msg { min-height: 18px; font-size: 0.74rem; margin-top: 9px; line-height: 1.6; }
+  .lm-msg.ok { color: #3d8b50; }
+  .lm-msg.err { color: #c0392b; }
+  .lm-tip { margin-top: 12px; padding: 8px 11px; border-radius: 9px; background: rgba(79,122,74,0.1); font-size: 0.7rem; color: #4f7a4a; line-height: 1.6; }
+  .lm-skip { display: block; margin: 12px auto 0; border: none; background: none; color: #8a9f86; font-size: 0.74rem; cursor: pointer; font-family: inherit; }
+  .lm-skip:hover { color: #4a6746; text-decoration: underline; }
+  .lm-user { margin-left: auto; font-size: 0.74rem; font-weight: 700; color: #4a6746; background: rgba(255,255,255,0.65); border: 1px solid rgba(125,158,119,0.45); border-radius: 999px; padding: 5px 14px; cursor: pointer; font-family: inherit; }
+  .lm-user:hover { background: #e8f0e5; }
+  .lm-user.on { color: #8a9f86; cursor: default; }
+
+</style>
+</head>
+<body>
+<!-- 正式登录弹窗：邮箱验证码 · 浏览 10 秒自动弹出 -->
+<div class="login-mask" id="loginMask">
+  <div class="login-modal">
+    <button class="lm-close" id="lmClose" title="关闭" aria-label="关闭">×</button>
+    <div class="lm-logo">🔬</div>
+    <h2>登录医药科研投稿助手</h2>
+    <div class="lm-sub">输入邮箱获取验证码，即可登录</div>
+    <div class="lm-benefit">🎁 登录后可体验 <b>AI 语义推荐 Top5</b>（约 6~20 秒）</div>
+    <div class="lm-field">
+      <label>邮箱</label>
+      <input class="lm-inp" id="lmEmail" type="email" placeholder="请输入邮箱" autocomplete="email">
+    </div>
+    <div class="lm-field">
+      <label>验证码</label>
+      <div class="lm-row">
+        <input class="lm-inp" id="lmCode" placeholder="6 位验证码" maxlength="6" autocomplete="one-time-code" style="letter-spacing:4px;">
+        <button class="lm-code" id="lmSendBtn">获取验证码</button>
+      </div>
+    </div>
+    <button class="lm-btn" id="lmLoginBtn">登 录</button>
+    <div class="lm-msg" id="lmMsg"></div>
+    <div class="lm-tip">🔒 当前为本地演示模式：验证码会直接显示在下方提示里；接入 Supabase 邮箱验证码后改为真实发送。</div>
+    <button class="lm-skip" id="lmSkip">暂不登录，先逛逛 →</button>
+  </div>
+</div>
+<div class="wrap">
+  <div class="head">
+    <h1>🔬 医药科研投稿助手 <button class="lm-user" id="lmUserBtn">👤 登录</button></h1>
+    <p>覆盖药理学、肿瘤、免疫、药剂/递送、天然产物、临床与 Meta 分析等方向的 SCI 期刊。支持筛选、关键词初筛，以及 <b>AI 语义推荐</b>。</p>
+    <span class="warn">⚠ 数据为 AI 整理示例，可能与最新 JCR / 期刊官网有偏差，正式使用前务必逐本核实；AI 推荐理由仅供参考，投稿前请以期刊官网要求为准。</span>
+  </div>
+
+  <div class="layout">
+    <aside class="side">
+      <h3>筛选条件</h3>
+      <div class="group">
+        <div class="gt">🔍 搜索</div>
+        <input type="search" id="q" placeholder="期刊名 / 关键词…">
+      </div>
+      <div class="group">
+        <div class="gt">JCR 分区</div>
+        <div class="qrow">
+          <label class="chk"><input type="checkbox" class="fq" value="Q1" checked> Q1</label>
+          <label class="chk"><input type="checkbox" class="fq" value="Q2" checked> Q2</label>
+          <label class="chk"><input type="checkbox" class="fq" value="Q3" checked> Q3</label>
+          <label class="chk"><input type="checkbox" class="fq" value="Q4" checked> Q4</label>
+        </div>
+      </div>
+      <div class="group">
+        <div class="gt">学科（JCR 医学）</div>
+        <select id="catSel" class="catsel">
+          <option value="">全部学科</option>
+        </select>
+      </div>
+      <div class="group">
+        <div class="gt">影响因子区间</div>
+        <div class="range"><input id="ifMin" type="number" placeholder="0"> ≤ IF ≤ <input id="ifMax" type="number" placeholder="100"></div>
+      </div>
+      <div class="group">
+        <div class="gt">版面费 / APC</div>
+        <label class="chk"><input type="checkbox" id="oaOnly"> 仅看 OA 期刊（有 APC）</label>
+        <label class="chk"><input type="checkbox" id="noOa"> 仅看订阅制（无 APC）</label>
+      </div>
+      <div class="group">
+        <div class="gt">研究主题</div>
+        <div class="chips" id="topicChips"></div>
+      </div>
+      <div class="group">
+        <div class="gt">稿件类型</div>
+        <div class="chips" id="typeChips"></div>
+      </div>
+      <button class="reset" id="resetBtn">↺ 重置筛选</button>
+    </aside>
+
+    <main class="main">
+      <div class="match-panel">
+        <h3>📄 摘要匹配期刊</h3>
+        <div class="textbox">
+          <textarea id="abs" placeholder="粘贴你的论文摘要（中文或英文都可以）…&#10;例如：A network meta-analysis comparing the efficacy and safety of different PD-1 inhibitors combined with anlotinib in non-small cell lung cancer..."></textarea>
+        </div>
+        <div class="clear-row"><button class="clear-btn-sm" id="clearAbs" type="button">🧹 清空内容</button></div>
+        <div class="btn-row">
+          <button class="btn" id="localBtn">🎯 关键词初筛 TOP5</button>
+          <button class="btn ai-main" id="aiBtn">🤖 AI 语义推荐 Top5</button>
+          <span class="ai-time">AI 语义推荐约 6~20 秒</span>
+          <span class="ai-lock" id="aiLockTag">🔒 登录后可用</span>
+        </div>
+        
+      <div class="ai-panel">
+        <div class="ai-head">
+          <h3>⚖️ 本地初筛 vs AI 语义推荐</h3>
+          <span class="ai-meta" id="aiMeta">点左侧按钮填左栏 · 点右侧按钮填右栏 · 绿色圆点 = 两边都选中</span>
+        </div>
+        <div class="cmp">
+          <div class="cmp-col">
+            <div class="cmp-title">🎯 关键词初筛 TOP5</div>
+            <div id="cmpLocal"><div class="ai-err">尚未运行 · 粘贴摘要后点左侧按钮</div></div>
+          </div>
+          <div class="cmp-col">
+            <div class="cmp-title">🤖 AI 语义推荐 Top5 <span class="badge-ai">免费</span></div>
+            <div id="cmpAi"><div class="ai-err">🔒 AI 语义推荐需登录 · 登录后粘贴摘要点右侧按钮</div></div>
+          </div>
+        </div>
+        <div class="prescreen collapsed" id="prescreen">
+          <div class="prescreen-head" id="prescreenHead">🎯 本地预筛 Top30 候选 <span class="ps-meta" id="prescreenMeta"></span><span class="ps-arrow">▾</span></div>
+          <div class="prescreen-body" id="prescreenBody"></div>
+        </div>
+      </div>
+      </div>
+
+      
+
+      <div class="toolbar">
+        <span class="cnt" id="cnt">共 0 本期刊</span>
+        <button class="btn" id="btnTop30">🎯 关键词筛选 Top30</button>
+        <button class="btn" id="btnAll">📚 查看所有期刊</button>
+        <select id="sort">
+          <option value="if">按影响因子 ↓</option>
+          <option value="q">按分区 ↑</option>
+          <option value="apc">按 APC ↓</option>
+        </select>
+      </div>
+      <div class="jlist" id="jlist"></div>
+      <div class="pager" id="pager"></div>
+    </main>
+  </div>
+
+  <footer>© 2026 医药科研投稿助手 · AI 推荐基于智谱 GLM-4-Flash 免费模型 · 指标以期刊官网及最新 JCR 分区为准</footer>
+</div>
+
+<script>
+var FALLBACK_JOURNALS = [
+  { name: 'Journal of Clinical Oncology', q: 'Q1', if: 42.1, wk: 12, apc: 0, oa: false, tags: ['肿瘤', '临床'], types: ['临床研究', 'Meta 分析'], kw: ['cancer', 'oncology', 'tumor', 'clinical trial', 'randomized', 'chemotherapy', 'immunotherapy'] },
+  { name: 'Annals of Oncology', q: 'Q1', if: 50.5, wk: 10, apc: 0, oa: false, tags: ['肿瘤', '临床'], types: ['临床研究', 'Meta 分析'], kw: ['cancer', 'oncology', 'metastatic', 'biomarker', 'clinical trial'] },
+  { name: 'Cancer Research', q: 'Q1', if: 12.5, wk: 8, apc: 0, oa: false, tags: ['肿瘤', '分子/机制'], types: ['基础研究'], kw: ['cancer', 'tumor', 'carcinoma', 'xenograft', 'mechanism', 'pathway', 'in vitro', 'cell line'] },
+  { name: 'Cancer Letters', q: 'Q1', if: 9.1, wk: 6, apc: 0, oa: false, tags: ['肿瘤', '分子/机制'], types: ['基础研究', '临床研究', 'Meta 分析'], kw: ['cancer', 'tumor', 'carcinoma', 'metastasis', 'drug resistance', 'apoptosis'] },
+  { name: 'British Journal of Cancer', q: 'Q1', if: 8.8, wk: 8, apc: 0, oa: false, tags: ['肿瘤', '临床'], types: ['临床研究', 'Meta 分析'], kw: ['cancer', 'tumor', 'survival', 'prognosis', 'clinical trial'] },
+  { name: 'Frontiers in Oncology', q: 'Q2', if: 3.5, wk: 8, apc: 2950, oa: true, tags: ['肿瘤'], types: ['临床研究', '基础研究', 'Meta 分析'], kw: ['cancer', 'tumor', 'carcinoma', 'prognosis', 'survival'] },
+  { name: 'BMC Cancer', q: 'Q2', if: 3.4, wk: 8, apc: 2590, oa: true, tags: ['肿瘤', '临床'], types: ['临床研究', '基础研究', 'Meta 分析'], kw: ['cancer', 'tumor', 'carcinoma', 'survival', 'prognosis', 'retrospective'] },
+  { name: 'Pharmacological Reviews', q: 'Q1', if: 19.3, wk: 14, apc: 0, oa: false, tags: ['药理'], types: ['综述'], kw: ['review', 'pharmacology', 'receptor', 'signaling', 'drug target'] },
+  { name: 'Trends in Pharmacological Sciences', q: 'Q1', if: 13.8, wk: 12, apc: 0, oa: false, tags: ['药理'], types: ['综述'], kw: ['pharmacology', 'drug', 'review', 'receptor', 'target'] },
+  { name: 'Pharmacology & Therapeutics', q: 'Q1', if: 12.3, wk: 10, apc: 0, oa: false, tags: ['药理'], types: ['综述', '基础研究'], kw: ['pharmacology', 'therapy', 'drug', 'review', 'pathway'] },
+  { name: 'British Journal of Pharmacology', q: 'Q1', if: 6.8, wk: 7, apc: 0, oa: false, tags: ['药理'], types: ['基础研究', '临床研究'], kw: ['pharmacology', 'drug', 'agonist', 'antagonist', 'receptor', 'in vivo'] },
+  { name: 'Biomedicine & Pharmacotherapy', q: 'Q1', if: 6.9, wk: 6, apc: 3200, oa: true, tags: ['药理', '肿瘤', '天然产物'], types: ['基础研究', '临床研究'], kw: ['pharmacology', 'cancer', 'tumor', 'extract', 'flavonoid', 'apoptosis', 'mechanism'] },
+  { name: 'European Journal of Pharmacology', q: 'Q2', if: 4.4, wk: 6, apc: 0, oa: false, tags: ['药理'], types: ['基础研究'], kw: ['pharmacology', 'drug', 'agonist', 'antagonist', 'in vivo', 'in vitro', 'mice', 'rat'] },
+  { name: 'Frontiers in Pharmacology', q: 'Q2', if: 4.4, wk: 8, apc: 2950, oa: true, tags: ['药理', '天然产物', '分子/机制'], types: ['基础研究', '临床研究', 'Meta 分析'], kw: ['pharmacology', 'drug', 'herbal', 'extract', 'network pharmacology', 'docking', 'mice'] },
+  { name: 'Biochemical Pharmacology', q: 'Q2', if: 5.3, wk: 6, apc: 0, oa: false, tags: ['药理', '分子/机制'], types: ['基础研究'], kw: ['pharmacology', 'biochemical', 'enzyme', 'kinase', 'inhibitor', 'pathway'] },
+  { name: 'Molecular Pharmacology', q: 'Q1', if: 3.6, wk: 6, apc: 0, oa: false, tags: ['药理', '分子/机制'], types: ['基础研究'], kw: ['molecular', 'receptor', 'signaling', 'kinase', 'transcription'] },
+  { name: 'Journal of Ethnopharmacology', q: 'Q1', if: 4.8, wk: 7, apc: 0, oa: false, tags: ['天然产物', '药理', '中药/本草'], types: ['基础研究', '临床研究'], kw: ['herbal', 'extract', 'traditional', 'plant', 'flavonoid', 'alkaloid', 'saponin', 'ethnopharmacology'] },
+  { name: 'Phytomedicine', q: 'Q1', if: 6.7, wk: 7, apc: 0, oa: false, tags: ['天然产物', '药理', '中药/本草'], types: ['基础研究', '临床研究', 'Meta 分析'], kw: ['herbal', 'extract', 'phytochemical', 'flavonoid', 'network pharmacology', 'docking', 'mice'] },
+  { name: 'Chinese Medicine', q: 'Q2', if: 5.0, wk: 8, apc: 2200, oa: true, tags: ['天然产物', '中药/本草'], types: ['基础研究', '临床研究', 'Meta 分析'], kw: ['traditional chinese medicine', 'herbal', 'formula', 'network pharmacology', 'docking', 'extract'] },
+  { name: 'Journal of Natural Products', q: 'Q2', if: 4.5, wk: 8, apc: 0, oa: false, tags: ['天然产物'], types: ['基础研究'], kw: ['natural product', 'isolation', 'compound', 'bioassay', 'phytochemical', 'marine'] },
+  { name: 'Natural Product Reports', q: 'Q1', if: 11.9, wk: 12, apc: 0, oa: false, tags: ['天然产物'], types: ['综述'], kw: ['natural product', 'review', 'biosynthesis', 'phytochemical'] },
+  { name: 'Journal of Controlled Release', q: 'Q1', if: 10.5, wk: 8, apc: 0, oa: false, tags: ['药剂/递送'], types: ['基础'], kw: ['delivery', 'nanoparticle', 'liposome', 'formulation', 'drug release', 'in vivo'] },
+  { name: 'Advanced Drug Delivery Reviews', q: 'Q1', if: 15.2, wk: 12, apc: 0, oa: false, tags: ['药剂/递送'], types: ['综述'], kw: ['drug delivery', 'review', 'nanoparticle', 'biomaterial', 'formulation'] },
+  { name: 'International Journal of Pharmaceutics', q: 'Q1', if: 5.3, wk: 7, apc: 0, oa: false, tags: ['药剂/递送', '药代动力学'], types: ['基础研究'], kw: ['pharmaceutical', 'formulation', 'nanoparticle', 'liposome', 'tablet', 'dissolution', 'bioavailability'] },
+  { name: 'Acta Pharmaceutica Sinica B', q: 'Q1', if: 14.5, wk: 8, apc: 3000, oa: true, tags: ['药剂/递送', '药理', '天然产物', '药代动力学'], types: ['基础研究', '临床研究', '综述'], kw: ['pharmaceutical', 'drug', 'pharmacology', 'natural product', 'delivery', 'mechanism'] },
+  { name: 'Journal of Immunology', q: 'Q1', if: 4.4, wk: 8, apc: 0, oa: false, tags: ['免疫'], types: ['基础研究'], kw: ['immune', 't cell', 'antibody', 'cytokine', 'inflammation', 'immunology'] },
+  { name: 'Frontiers in Immunology', q: 'Q1', if: 7.3, wk: 8, apc: 3250, oa: true, tags: ['免疫', '肿瘤'], types: ['基础研究', '临床研究', 'Meta 分析'], kw: ['immune', 'immunotherapy', 't cell', 'antibody', 'vaccine', 'inflammation', 'tumor'] },
+  { name: 'Clinical & Translational Immunology', q: 'Q2', if: 4.9, wk: 8, apc: 2600, oa: true, tags: ['免疫', '临床', '转化医学'], types: ['临床研究', '基础研究'], kw: ['immune', 'translational', 't cell', 'biomarker', 'immunotherapy'] },
+  { name: 'Journal of Clinical Epidemiology', q: 'Q1', if: 7.2, wk: 10, apc: 0, oa: false, tags: ['临床', '转化医学'], types: ['Meta 分析', '方法学'], kw: ['epidemiology', 'meta-analysis', 'systematic review', 'bias', 'methods', 'cohort'] },
+  { name: 'Systematic Reviews', q: 'Q2', if: 3.6, wk: 10, apc: 2290, oa: true, tags: ['临床'], types: ['Meta 分析', '综述'], kw: ['systematic review', 'meta-analysis', 'protocol', 'cochrane'] },
+  { name: 'BMC Medical Research Methodology', q: 'Q2', if: 3.9, wk: 9, apc: 2590, oa: true, tags: ['临床', '生物信息'], types: ['方法学', 'Meta 分析'], kw: ['methodology', 'meta-analysis', 'statistical', 'bias', 'models'] },
+  { name: 'Value in Health', q: 'Q1', if: 5.2, wk: 10, apc: 0, oa: false, tags: ['药物经济学'], types: ['临床研究', 'Meta 分析'], kw: ['health economics', 'cost-effectiveness', 'quality of life', 'utility', 'reimbursement'] },
+  { name: 'Pharmacoeconomics', q: 'Q2', if: 4.3, wk: 10, apc: 0, oa: false, tags: ['药物经济学'], types: ['临床研究', 'Meta 分析'], kw: ['cost-effectiveness', 'pharmacoeconomics', 'budget', 'utility', 'health economics'] },
+  { name: 'Food and Chemical Toxicology', q: 'Q1', if: 4.3, wk: 6, apc: 0, oa: false, tags: ['毒理'], types: ['基础研究'], kw: ['toxicity', 'toxic', 'hepatotoxicity', 'nephrotoxicity', 'safety', 'in vitro', 'mice'] },
+  { name: 'Toxicology Letters', q: 'Q2', if: 3.1, wk: 6, apc: 0, oa: false, tags: ['毒理'], types: ['基础研究'], kw: ['toxicity', 'toxic', 'mechanism', 'exposure', 'mice', 'rat'] },
+  { name: 'Pharmacogenomics', q: 'Q3', if: 2.1, wk: 8, apc: 0, oa: false, tags: ['药物基因组', '药代动力学'], types: ['临床研究', '基础研究'], kw: ['pharmacogenomic', 'polymorphism', 'genotype', 'drug metabolism', 'cyp'] }
+];
+var FALLBACK_URLS = {
+  'Journal of Clinical Oncology': 'https://ascopubs.org/journal/jco',
+  'Annals of Oncology': 'https://academic.oup.com/annonc',
+  'Cancer Research': 'https://aacrjournals.org/cancerres',
+  'Cancer Letters': 'https://www.sciencedirect.com/journal/cancer-letters',
+  'British Journal of Cancer': 'https://www.nature.com/bjc',
+  'Frontiers in Oncology': 'https://www.frontiersin.org/journals/oncology',
+  'BMC Cancer': 'https://bmccancer.biomedcentral.com',
+  'Pharmacological Reviews': 'https://pharmrev.aspetjournals.org',
+  'Trends in Pharmacological Sciences': 'https://www.cell.com/trends/pharmacological-sciences',
+  'Pharmacology & Therapeutics': 'https://www.sciencedirect.com/journal/pharmacology-and-therapeutics',
+  'British Journal of Pharmacology': 'https://bpspubs.onlinelibrary.wiley.com/journal/14765381',
+  'Biomedicine & Pharmacotherapy': 'https://www.sciencedirect.com/journal/biomedicine-and-pharmacotherapy',
+  'European Journal of Pharmacology': 'https://www.sciencedirect.com/journal/european-journal-of-pharmacology',
+  'Frontiers in Pharmacology': 'https://www.frontiersin.org/journals/pharmacology',
+  'Biochemical Pharmacology': 'https://www.sciencedirect.com/journal/biochemical-pharmacology',
+  'Molecular Pharmacology': 'https://molpharm.aspetjournals.org',
+  'Journal of Ethnopharmacology': 'https://www.sciencedirect.com/journal/journal-of-ethnopharmacology',
+  'Phytomedicine': 'https://www.sciencedirect.com/journal/phytomedicine',
+  'Chinese Medicine': 'https://cmjournal.biomedcentral.com',
+  'Journal of Natural Products': 'https://pubs.acs.org/journal/jnprdf',
+  'Natural Product Reports': 'https://pubs.rsc.org/en/journals/journalissues/np',
+  'Journal of Controlled Release': 'https://www.sciencedirect.com/journal/journal-of-controlled-release',
+  'Advanced Drug Delivery Reviews': 'https://www.sciencedirect.com/journal/advanced-drug-delivery-reviews',
+  'International Journal of Pharmaceutics': 'https://www.sciencedirect.com/journal/international-journal-of-pharmaceutics',
+  'Acta Pharmaceutica Sinica B': 'https://www.sciencedirect.com/journal/acta-pharmaceutica-sinica-b',
+  'Journal of Immunology': 'https://www.jimmunol.org',
+  'Frontiers in Immunology': 'https://www.frontiersin.org/journals/immunology',
+  'Clinical & Translational Immunology': 'https://onlinelibrary.wiley.com/journal/20500068',
+  'Journal of Clinical Epidemiology': 'https://www.sciencedirect.com/journal/journal-of-clinical-epidemiology',
+  'Systematic Reviews': 'https://systematicreviewsjournal.biomedcentral.com',
+  'BMC Medical Research Methodology': 'https://bmcmedresmethodol.biomedcentral.com',
+  'Value in Health': 'https://www.valueinhealthjournal.com',
+  'Pharmacoeconomics': 'https://link.springer.com/journal/40273',
+  'Food and Chemical Toxicology': 'https://www.sciencedirect.com/journal/food-and-chemical-toxicology',
+  'Toxicology Letters': 'https://www.sciencedirect.com/journal/toxicology-letters',
+  'Pharmacogenomics': 'https://www.futuremedicine.com/journal/pgs'
+};
+
+var JOURNALS = FALLBACK_JOURNALS;
+var URLS = FALLBACK_URLS;
+var DATA_STATE = { source: '内置备份数据', updatedAt: '', path: '' };
+var DATA_CANDIDATES = ['journals.json', '数据更新/journals.json', '../数据更新/journals.json'];
+var SCRIPT_CANDIDATES = ['journals-data.js', '数据更新/journals-data.js', '../数据更新/journals-data.js'];
+
+function applyData(d) {
+  if (!d || !d.journals || !d.journals.length) return false;
+  JOURNALS = d.journals;
+  URLS = Object.assign({}, FALLBACK_URLS, d.urls || {});
+  DATA_STATE.updatedAt = d.updatedAt || '';
+  DATA_STATE.years = (d.papersYears && d.papersYears.length) ? d.papersYears : null;
+  DATA_STATE.categories = d.categories || null;
+  DATA_STATE.source = 'journals.json';
+  return true;
+}
+
+function loadExternalData() {
+  function tryFetch(i) {
+    if (i >= DATA_CANDIDATES.length) return Promise.resolve(false);
+    return fetch(DATA_CANDIDATES[i], { cache: 'no-store' })
+      .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+      .then(function (d) {
+        if (!applyData(d)) throw new Error('数据格式不正确');
+        DATA_STATE.path = DATA_CANDIDATES[i];
+        return true;
+      })
+      .catch(function () { return tryFetch(i + 1); });
+  }
+  function tryScript(i) {
+    if (i >= SCRIPT_CANDIDATES.length) return Promise.resolve(false);
+    return new Promise(function (resolve) {
+      var s = document.createElement('script');
+      s.src = SCRIPT_CANDIDATES[i];
+      s.onload = function () {
+        if (window.JOURNALS_DATA && applyData(window.JOURNALS_DATA)) {
+          DATA_STATE.path = SCRIPT_CANDIDATES[i];
+          DATA_STATE.source = 'journals-data.js（本地文件）';
+          resolve(true);
+        } else resolve(tryScript(i + 1));
+      };
+      s.onerror = function () { resolve(tryScript(i + 1)); };
+      document.head.appendChild(s);
+    });
+  }
+  return tryFetch(0).then(function (ok) {
+    if (ok) return true;
+    return tryScript(0);
+  });
+}
+
+function showDataNote() {
+  var note = document.getElementById('dataNote');
+  if (note) note.textContent = '数据源：' + DATA_STATE.source + (DATA_STATE.updatedAt ? ' · 更新于 ' + String(DATA_STATE.updatedAt).slice(0, 10) : '') + ' · 共 ' + JOURNALS.length + ' 本';
+}
+
+var TOPICS = ['肿瘤', '药理', '免疫', '微生物', '药剂/递送', '天然产物', '中药/本草', '临床', '分子/机制', '生物信息', '转化医学', '药代动力学', '毒理', '药物经济学', '诊断/影像'];
+var TYPES = ['基础研究', '临床研究', 'Meta 分析', '综述', '病例报告', '研究简报', '方法学'];
+
+var state = { q: '', qs: { Q1: true, Q2: true, Q3: true, Q4: true }, ifMin: 0, ifMax: 100, wkMax: 99, oaOnly: false, noOa: false, topics: [], types: [], cat: '', listMode: 'all', page: 1 };
+var PAGE_SIZE = 30;
+
+function initCatSel() {
+  var sel = document.getElementById('catSel');
+  if (!sel) return;
+  var cats = (DATA_STATE.categories || []).slice();
+  if (!cats.length) {
+    var map = {};
+    JOURNALS.forEach(function (j) { (j.cats || []).forEach(function (c) { if (!/^Multiple$/i.test(c)) map[c] = (map[c] || 0) + 1; }); });
+    cats = Object.keys(map).map(function (k) { return { name: k, count: map[k] }; }).sort(function (a, b) { return b.count - a.count; });
+  }
+  var cur = state.cat || '';
+  sel.innerHTML = '<option value="">全部学科（' + JOURNALS.length + ' 本）</option>' + cats.map(function (c) {
+    return '<option value="' + esc(c.name) + '"' + (cur === c.name ? ' selected' : '') + '>' + esc(c.name) + '（' + c.count + '）</option>';
+  }).join('');
+}
+
+function initChips() {
+  document.getElementById('topicChips').innerHTML = '';
+  document.getElementById('typeChips').innerHTML = '';
+  var tc = document.getElementById('topicChips');
+  TOPICS.forEach(function (t) {
+    var s = document.createElement('span');
+    s.className = 'chip'; s.textContent = t;
+    s.onclick = function () { s.classList.toggle('on'); state.topics = Array.from(tc.querySelectorAll('.chip.on')).map(function (x) { return x.textContent; }); render(); };
+    tc.appendChild(s);
+  });
+  var yc = document.getElementById('typeChips');
+  TYPES.forEach(function (t) {
+    var s = document.createElement('span');
+    s.className = 'chip'; s.textContent = t;
+    s.onclick = function () { s.classList.toggle('on'); state.types = Array.from(yc.querySelectorAll('.chip.on')).map(function (x) { return x.textContent; }); render(); };
+    yc.appendChild(s);
+  });
+}
+
+function matches(j) {
+  var s = state;
+  if (!s.qs[j.q]) return false;
+  if (j.if < s.ifMin || j.if > s.ifMax) return false;
+  if (j.wk > s.wkMax) return false;
+  if (s.oaOnly && !j.oa) return false;
+  if (s.noOa && j.oa) return false;
+  if (s.topics.length && !j.tags.some(function (t) { return s.topics.indexOf(t) > -1; })) return false;
+  if (s.types.length && !j.types.some(function (t) { return s.types.indexOf(t) > -1; })) return false;
+  if (s.cat && !(j.cats && j.cats.indexOf(s.cat) > -1)) return false;
+  if (s.q) {
+    var kw = (j.name + ' ' + (j.tags || []).join(' ') + ' ' + (j.kw || []).join(' ')).toLowerCase();
+    if (kw.indexOf(s.q.toLowerCase()) < 0) return false;
+  }
+  return true;
+}
+
+function render() {
+  var list = JOURNALS.filter(matches);
+  if (state.listMode === 'top30') {
+    list = localTop(30).map(function (x) { return x.j; });
+    state.page = 1;
+  }
+  var sort = document.getElementById('sort').value;
+  var aiMap = window.AI_RESULTS || null;
+  if (aiMap) {
+    if (window.AI_ONLY) list = list.filter(function (j) { return aiMap[j.name]; });
+    list.sort(function (a, b) {
+      var da = aiMap[a.name] ? 1 : 0, db = aiMap[b.name] ? 1 : 0;
+      if (da !== db) return db - da;
+      if (sort === 'if') return b.if - a.if;
+      if (sort === 'wk') return a.wk - b.wk;
+      if (sort === 'apc') return b.apc - a.apc;
+      return a.q.localeCompare(b.q);
+    });
+  } else {
+    list.sort(function (a, b) {
+      if (sort === 'if') return b.if - a.if;
+      if (sort === 'wk') return a.wk - b.wk;
+      if (sort === 'apc') return b.apc - a.apc;
+      return a.q.localeCompare(b.q);
+    });
+  }
+  var total = list.length;
+  var pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  if (state.page > pages) state.page = pages;
+  if (state.page < 1) state.page = 1;
+  document.getElementById('cnt').textContent = state.listMode === 'top30'
+    ? '🎯 关键词预筛 Top30：命中 ' + total + ' 本（点「查看所有期刊」恢复）'
+    : '共 ' + total + ' 本期刊 · 第 ' + state.page + ' / ' + pages + ' 页';
+  document.getElementById('btnTop30').classList.toggle('on', state.listMode === 'top30');
+  document.getElementById('btnAll').classList.toggle('on', state.listMode !== 'top30');
+  var box = document.getElementById('jlist');
+  box.innerHTML = '';
+  if (!list.length) { box.innerHTML = '<div class="empty">没有符合条件的期刊，试试放宽筛选条件</div>'; document.getElementById('pager').innerHTML = ''; return; }
+  var slice = list.slice((state.page - 1) * PAGE_SIZE, state.page * PAGE_SIZE);
+  slice.forEach(function (j) {
+    var d = document.createElement('div');
+    var ai = aiMap ? aiMap[j.name] : null;
+    d.className = 'jcard' + (ai ? ' ai-on' : '');
+    var url = URLS[j.name] || j.website;
+    var aiPart = ai ? '<button class="ai-why-btn">💡 查看 AI 推荐理由</button><div class="ai-why">' + esc(ai.reason) + '</div>' : '';
+    var papersHtml = '';
+    var src = String(j.papersSource || '');
+    if ((src.indexOf('PubMed') === 0 || src.indexOf('Crossref') === 0 || src.indexOf('OpenAlex') === 0) && j.papersByYear3) {
+      var yrs = Object.keys(j.papersByYear3).filter(function (y) { return /^\d{4}$/.test(y); }).sort();
+      if (yrs.length) {
+        var label = src.indexOf('Crossref') === 0 ? 'Crossref' : (src.indexOf('OpenAlex') === 0 ? 'OpenAlex' : 'PubMed');
+        papersHtml = '<div class="papers">📈 发文(' + label + ') ' + yrs[0] + '–' + yrs[yrs.length - 1] + '：' +
+          yrs.map(function (y) { return j.papersByYear3[y] != null ? j.papersByYear3[y] : '—'; }).join(' / ') + ' 篇</div>';
+      }
+    } else if (j.papersCount != null && j.papersCount > 0) {
+      papersHtml = '<div class="papers">📊 ' + (j.papersYear || '') + ' 年发文：' + j.papersCount + ' 篇（JCR）</div>';
+    }
+    var cats = j.cats || [];
+    var tagsHtml = (j.tags && j.tags.length) ? '<div class="tags">' + j.tags.map(function (t) { return '<span>' + esc(t) + '</span>'; }).join('') + '</div>' : '';
+    var catHtml = cats.length ? '<div class="cats">📚 ' + esc(cats.slice(0, 3).join(' / ')) + (cats.length > 3 ? ' 等' : '') + '</div>' : '';
+    var typeHtml = '<div class="types">收稿：' + (j.types && j.types.length ? j.types.map(esc).join(' / ') : '以官网为准（待标注）') + '</div>';
+    d.innerHTML =
+      '<div class="j-head"><span class="j-name">' + (url ? '<a href="' + url + '" target="_blank" rel="noreferrer">' + j.name + '</a>' : j.name) + '</span><span class="q ' + j.q.toLowerCase() + '">' + j.q + '</span>' + (ai ? '<span class="ai-ribbon">AI 推荐</span>' : '') + '</div>' +
+      tagsHtml + catHtml +
+      '<div class="kv">' +
+      '<span><b>IF</b> ' + j.if + '</span>' +
+      '<span><b>APC</b> ' + (j.apc ? '$' + j.apc.toLocaleString() : (j.oaAuto === '' || j.oaAuto == null ? '待核实' : '无（订阅制）')) + '</span>' +
+      '<span><b>OA</b> ' + (j.oa ? '是' : (j.oaAuto === '' || j.oaAuto == null ? '待核实' : '否')) + '</span>' +
+      '</div>' +
+      papersHtml +
+      typeHtml +
+      aiPart +
+      (url ? '<a class="jlink" href="' + url + '" target="_blank" rel="noreferrer">访问官网 ↗</a>' : '');
+    box.appendChild(d);
+  });
+  box.querySelectorAll('.ai-why-btn').forEach(function (b) {
+    b.onclick = function () {
+      var why = b.parentNode.querySelector('.ai-why');
+      if (why) { why.classList.toggle('open'); b.textContent = why.classList.contains('open') ? '收起 AI 推荐理由' : '💡 查看 AI 推荐理由'; }
+    };
+  });
+  renderPager(pages);
+}
+
+function renderPager(pages) {
+  var pager = document.getElementById('pager');
+  if (!pager) return;
+  if (pages <= 1 || state.listMode === 'top30') { pager.innerHTML = ''; return; }
+  var btns = [];
+  btns.push('<button' + (state.page === 1 ? ' disabled' : '') + ' data-p="1">&lt;&lt;</button>');
+  btns.push('<button' + (state.page === 1 ? ' disabled' : '') + ' data-p="' + (state.page - 1) + '">&lt;</button>');
+  var start = Math.max(1, state.page - 2), end = Math.min(pages, state.page + 2);
+  for (var i = start; i <= end; i++) btns.push('<button class="' + (i === state.page ? 'on' : '') + '" data-p="' + i + '">' + i + '</button>');
+  btns.push('<button' + (state.page === pages ? ' disabled' : '') + ' data-p="' + (state.page + 1) + '">&gt;</button>');
+  btns.push('<button' + (state.page === pages ? ' disabled' : '') + ' data-p="' + pages + '">&gt;&gt;</button>');
+  pager.innerHTML = btns.join('');
+  pager.querySelectorAll('button').forEach(function (b) {
+    b.onclick = function () {
+      if (!b.disabled) { state.page = Number(b.getAttribute('data-p')); render(); }
+    };
+  });
+}
+
+var STOP = new Set(['the','and','of','in','to','a','an','with','for','on','by','from','was','were','is','are','we','our','this','that','as','at','between','using','among','vs']);
+var TYPE_WORDS = {
+  '基础研究': ['in vitro', 'cell', 'cells', 'mice', 'mouse', 'xenograft', 'mechanism', 'pathway', 'western', 'pcr', 'apoptosis', 'knockdown', 'overexpression', 'tumor growth'],
+  '临床研究': ['clinical', 'trial', 'patients', 'patient', 'randomized', 'cohort', 'retrospective', 'prospective', 'survival', 'prognosis', 'efficacy', 'safety'],
+  'Meta 分析': ['meta-analysis', 'meta analysis', 'network meta', 'systematic review', 'review', 'pooled', 'odds ratio', 'hazard ratio'],
+  '综述': ['review', 'update', 'overview', 'perspective'],
+  '病例报告': ['case report', 'case series', 'case study'],
+  '研究简报': ['short communication', 'brief report', 'research letter'],
+  '方法学': ['methodology', 'method', 'statistical', 'bias', 'models', 'guideline']
+};
+var CN_TAGS = {
+  '肿瘤': ['肿瘤', '癌', '化疗', '放疗', '瘤'],
+  '药理': ['药理', '药物', '药效', '给药', '用药'],
+  '免疫': ['免疫', '炎症', '炎性', '抗体', '细胞因子', '免疫治疗'],
+  '微生物': ['菌', '微生物', '感染', '病毒', '真菌', '细菌'],
+  '药剂/递送': ['制剂', '递送', '纳米', '脂质体', '缓释', '给药系统'],
+  '天然产物': ['天然产物', '提取物', '黄酮', '生物碱', '皂苷', '多糖'],
+  '中药/本草': ['中药', '草药', '复方', '本草', '方剂'],
+  '临床': ['临床', '患者', '疗效', '随机', '队列', '病例', '预后'],
+  '分子/机制': ['分子', '机制', '蛋白', '基因', '通路', '凋亡', '增殖', '表达'],
+  '生物信息': ['生物信息', '组学', '测序', '机器学习', '数据库'],
+  '转化医学': ['转化', '临床前'],
+  '药代动力学': ['药代', '代谢', '半衰期', '生物利用度'],
+  '毒理': ['毒理', '毒性', '安全', '致癌'],
+  '药物经济学': ['经济', '成本', '费用', '医保'],
+  '诊断/影像': ['诊断', '影像', '超声', '磁共振', '病理', '生物标志物']
+};
+
+function localTop(topN) {
+  var text = document.getElementById('abs').value.trim();
+  var low = text.toLowerCase();
+  var tokens = low.split(/[^a-z0-9]+/).filter(function (w) { return w.length > 2 && !STOP.has(w); });
+  var hitTypes = Object.keys(TYPE_WORDS).filter(function (k) {
+    return TYPE_WORDS[k].some(function (w) { return low.indexOf(w) > -1; });
+  });
+  var pool = JOURNALS.filter(matches);
+  var scored = pool.map(function (j) {
+    var score = 0, hits = [];
+    (j.kw || []).forEach(function (w) {
+      if (w.length <= 3) {
+        if (tokens.indexOf(w) > -1) { score += 3; hits.push(w); }
+      } else if (low.indexOf(w) > -1) { score += 3; hits.push(w); }
+      else if (w.indexOf(' ') < 0 && tokens.indexOf(w) > -1) { score += 2; hits.push(w); }
+    });
+    (j.tags || []).forEach(function (t) {
+      if (t === '肿瘤' && /cancer|tumor|tumour|carcinoma|melanoma/.test(low)) { score += 1; hits.push('肿瘤方向'); }
+    });
+    hitTypes.forEach(function (t) {
+      if ((j.types || []).indexOf(t) > -1) { score += 4; hits.push(t); }
+    });
+    Object.keys(CN_TAGS).forEach(function (t) {
+      if (CN_TAGS[t].some(function (w) { return low.indexOf(w) > -1; }) && (j.tags || []).indexOf(t) > -1) {
+        score += 2; hits.push(t + '方向');
+      }
+    });
+    return { j: j, score: score, hits: hits };
+  });
+  scored.sort(function (a, b) { return b.score - a.score; });
+  var top = scored.slice(0, topN || 5).filter(function (x) { return x.score > 0; });
+  if (!top.length && (state.topics.length || state.types.length)) {
+    top = pool.filter(function (j) {
+      var hitT = !state.topics.length || (j.tags || []).some(function (t) { return state.topics.indexOf(t) > -1; });
+      var hitY = !state.types.length || (j.types || []).some(function (t) { return state.types.indexOf(t) > -1; });
+      return hitT && hitY;
+    }).sort(function (a, b) { return (b.if || 0) - (a.if || 0); }).slice(0, topN || 5)
+      .map(function (j) { return { j: j, score: 0, hits: ['按主题/类型兜底'] }; });
+  }
+  return top;
+}
+
+function fillPrescreen() {
+  var box = document.getElementById('prescreenBody');
+  var meta = document.getElementById('prescreenMeta');
+  if (!box) return;
+  var top = localTop(30);
+  document.getElementById('prescreen').classList.remove('collapsed');
+  meta.textContent = top.length ? '命中 ' + top.length + ' / 30 本 · 点击列表行可跳转官网' : '未命中，请补充英文关键词';
+  box.innerHTML = top.length ? top.map(function (x, i) {
+    var u = URLS[x.j.name] || x.j.website || '';
+    var name = u ? '<a href="' + esc(u) + '" target="_blank" rel="noreferrer" style="color:#33422f;">' + esc(x.j.name) + '</a>' : esc(x.j.name);
+    return '<div class="ps-row"><span class="ps-idx">' + (i + 1) + '</span><span class="ps-name">' + name + '</span>' +
+      '<span class="q ' + x.j.q.toLowerCase() + '" style="font-size:0.6rem;padding:1px 6px;border-radius:6px;color:#fff;">' + x.j.q + '</span>' +
+      '<span class="ps-if">IF ' + x.j.if + '</span><span class="ps-score">' + x.score + ' 分</span>' +
+      '<span class="ps-hit">' + x.hits.slice(0, 3).join('、') + '</span></div>';
+  }).join('') : '';
+}
+
+function matchAbstract() {
+  var box = document.getElementById('cmpLocal');
+  if (!document.getElementById('abs').value.trim()) { box.innerHTML = '<div class="ai-err">请先粘贴摘要，再点「关键词初筛 TOP5」</div>'; window.LAST_LOCAL = []; return; }
+  var top = localTop();
+  window.LAST_LOCAL = top;
+  if (!top.length) { box.innerHTML = '<div class="ai-err">未匹配到明显主题，请补充英文关键词（如 cancer / pharmacology / herbal / meta-analysis）</div>'; return; }
+  box.innerHTML = top.map(function (x, i) {
+    var url = URLS[x.j.name];
+    return '<div class="cmp-item"><span class="cmp-idx">' + (i + 1) + '</span><span class="nm">' + (url ? '<a href="' + url + '" target="_blank" rel="noreferrer">' + esc(x.j.name) + '</a>' : esc(x.j.name)) + ' <span class="q ' + x.j.q.toLowerCase() + '" style="font-size:0.6rem;padding:1px 6px;border-radius:6px;color:#fff;vertical-align:middle;">' + x.j.q + '</span></span><span class="sc">' + x.score + ' 分</span></div>' +
+      '<div class="cmp-why">IF ' + x.j.if + ' · 匹配：' + (x.hits.slice(0, 5).join('、') || '主题方向') + '</div>';
+  }).join('');
+  document.getElementById('aiMeta').textContent = '关键词初筛已匹配 ' + top.length + ' 本 · 再点右侧按钮生成 AI 推荐';
+  fillPrescreen();
+}
+
+var AI_BASE = (location.protocol === 'file:') ? 'http://localhost:8799' : '';
+function aiTopic() { return state.topics.length ? state.topics.join(' / ') : '不限'; }
+function aiType() { return state.types.length ? state.types.join(' / ') : '不限'; }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+function aiLoading(box) { box.innerHTML = '<div class="ai-load">' + '<div class="sk"></div>'.repeat(3) + '</div>'; }
+function aiErr(box, msg) { box.innerHTML = '<div class="ai-err">⚠ ' + msg + '</div>'; }
+function parseAi(raw) {
+  if (!raw) return null;
+  var bt = String.fromCharCode(96);
+  var s = String(raw).split(bt + bt + bt).join('').trim();
+  var m = s.match(/\[[\s\S]*\]/);
+  if (m) { try { var arr = JSON.parse(m[0]); if (Array.isArray(arr)) return arr; } catch (e) {} }
+  try { var obj = JSON.parse(s); if (obj && Array.isArray(obj.recommendations)) return obj.recommendations; } catch (e) {}
+  return null;
+}
+function jInfo(name) {
+  name = String(name || '').trim();
+  for (var i = 0; i < JOURNALS.length; i++) if (JOURNALS[i].name === name) return JOURNALS[i];
+  var low = name.toLowerCase();
+  for (var i = 0; i < JOURNALS.length; i++) if (JOURNALS[i].name.toLowerCase() === low) return JOURNALS[i];
+  return null;
+}
+function aiRun() {
+  var aBox = document.getElementById('cmpAi');
+  var loginOk = window.LOGIN_API && window.LOGIN_API.isLoggedIn();
+  if (!loginOk) {
+    aiErr(aBox, '🔒 请先登录后使用 AI 语义推荐（登录免费，约 6~20 秒返回结果）。');
+    if (window.LOGIN_API) window.LOGIN_API.showLogin();
+    return;
+  }
+  var abs = document.getElementById('abs').value.trim();
+  var btn = document.getElementById('aiBtn');
+  if (abs.length < 20) { aiErr(aBox, '摘要太短，请粘贴完整摘要（至少 20 个字）。'); return; }
+  var preCount = localTop(30).length;
+  btn.disabled = true;
+  var btnText = btn.textContent;
+  btn.textContent = '⏳ AI 精排中…';
+  aBox.innerHTML = '<div class="ai-load"><div class="sk"></div><div class="sk"></div><div class="sk"></div></div>';
+  document.getElementById('aiMeta').textContent = '本地预筛命中 ' + preCount + ' 本 → AI 精排 TOP5…';
+  fetch(AI_BASE + '/api/recommend', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'glm-4-flash-250414',
+      topic: aiTopic(),
+      type: aiType(),
+      abstract: abs,
+      format: 'json',
+      filters: {
+        qs: state.qs,
+        ifMin: state.ifMin,
+        ifMax: state.ifMax,
+        oaOnly: state.oaOnly,
+        noOa: state.noOa,
+        cat: state.cat || '',
+        q: state.q || ''
+      }
+    })
+  }).then(function (r) { return r.json(); }).then(function (d) {
+    if (!d.ok) { aiErr(aBox, 'AI 调用失败：' + esc(d.error)); return; }
+    var list = parseAi(d.answer);
+    if (!list || !list.length) { aiErr(aBox, 'AI 返回无法解析，请重试。'); return; }
+    var local = window.LAST_LOCAL || [];
+    var matched = list.filter(function (x) { return local.some(function (l) { return l.j.name === x.name; }); });
+  document.getElementById('aiMeta').textContent = '本地预筛命中 ' + (d.preselected || preCount || 0) + ' 本 → AI 精排 ' + list.length + ' 本' + (d.cache ? '（缓存）' : '') + (local.length ? '，与关键词筛选重合 ' + matched.length + ' 本（绿色圆点）' : '');
+    fillPrescreen();
+    aBox.innerHTML = list.map(function (x, i) {
+      var j = jInfo(x.name);
+      if (!j) return '';
+      var both = local.some(function (l) { return l.j.name === x.name; });
+      return '<div class="cmp-item' + (both ? ' both' : '') + '"><span class="dot"></span><span class="nm">' + (i + 1) + '. ' + (URLS[j.name] ? '<a href="' + URLS[j.name] + '" target="_blank" rel="noreferrer">' + esc(j.name) + '</a>' : esc(j.name)) + '</span><span class="sc">' + j.q + ' · IF ' + j.if + '</span></div>' +
+        '<div class="ai-reason" style="margin:0 0 8px 16px;">' + esc(x.reason) + '</div>';
+    }).join('');
+    if (window.DEMO) document.title = 'READY';
+  }).catch(function (e) {
+    aiErr(aBox, '无法连接本地 AI 服务：' + esc(e.message) + '<br>请先双击「启动测试.cmd」启动服务。');
+    if (window.DEMO) document.title = 'ERROR';
+  }).finally(function () {
+    btn.disabled = false;
+    btn.textContent = btnText;
+  });
+}
+
+
+document.getElementById('q').addEventListener('input', function (e) { state.q = e.target.value; state.page = 1; render(); });
+document.querySelectorAll('.fq').forEach(function (c) {
+  c.addEventListener('change', function () { state.qs[c.value] = c.checked; state.page = 1; render(); });
+});
+document.getElementById('ifMin').addEventListener('input', function (e) { state.ifMin = parseFloat(e.target.value) || 0; state.page = 1; render(); });
+document.getElementById('ifMax').addEventListener('input', function (e) { state.ifMax = parseFloat(e.target.value) || 100; state.page = 1; render(); });
+document.getElementById('oaOnly').addEventListener('change', function (e) { state.oaOnly = e.target.checked; if (e.target.checked) document.getElementById('noOa').checked = false; state.noOa = false; state.page = 1; render(); });
+document.getElementById('noOa').addEventListener('change', function (e) { state.noOa = e.target.checked; if (e.target.checked) document.getElementById('oaOnly').checked = false; state.oaOnly = false; state.page = 1; render(); });
+document.getElementById('catSel').addEventListener('change', function (e) { state.cat = e.target.value; state.page = 1; render(); });
+document.getElementById('sort').addEventListener('change', function () { state.page = 1; render(); });
+document.getElementById('localBtn').addEventListener('click', matchAbstract);
+document.getElementById('aiBtn').addEventListener('click', aiRun);
+document.getElementById('btnTop30').addEventListener('click', function () {
+  if (!document.getElementById('abs').value.trim()) {
+    document.getElementById('cnt').textContent = '请先在上方粘贴摘要，再点「关键词筛选 Top30」';
+    return;
+  }
+  state.listMode = 'top30';
+  fillPrescreen();
+  render();
+  document.getElementById('jlist').scrollIntoView({ behavior: 'smooth' });
+});
+document.getElementById('btnAll').addEventListener('click', function () {
+  state.listMode = 'all';
+  state.page = 1;
+  render();
+});
+document.getElementById('prescreenHead').addEventListener('click', function () {
+  document.getElementById('prescreen').classList.toggle('collapsed');
+});
+document.getElementById('clearAbs').addEventListener('click', function () {
+  document.getElementById('abs').value = '';
+  window.LAST_LOCAL = [];
+  state.listMode = 'all';
+  state.page = 1;
+  document.getElementById('cmpLocal').innerHTML = '<div class="ai-err">尚未运行 · 粘贴摘要后点左侧按钮</div>';
+  document.getElementById('cmpAi').innerHTML = '<div class="ai-err">尚未运行 · 粘贴摘要后点右侧按钮</div>';
+  document.getElementById('prescreen').classList.add('collapsed');
+  document.getElementById('prescreenMeta').textContent = '';
+  document.getElementById('prescreenBody').innerHTML = '';
+  document.getElementById('aiMeta').textContent = '点左侧按钮填左栏 · 点右侧按钮填右栏 · 绿色圆点 = 两边都选中';
+  render();
+  document.getElementById('abs').focus();
+});
+document.getElementById('resetBtn').addEventListener('click', function () {
+  state = { q: '', qs: { Q1: true, Q2: true, Q3: true, Q4: true }, ifMin: 0, ifMax: 100, wkMax: 99, oaOnly: false, noOa: false, topics: [], types: [], cat: '', listMode: 'all', page: 1 };
+  document.getElementById('q').value = '';
+  document.querySelectorAll('.fq').forEach(function (c) { c.checked = true; });
+  document.getElementById('ifMin').value = ''; document.getElementById('ifMax').value = '';
+  document.getElementById('oaOnly').checked = false; document.getElementById('noOa').checked = false;
+  document.getElementById('catSel').value = '';
+  document.querySelectorAll('.side .chip.on').forEach(function (c) { c.classList.remove('on'); });
+  render();
+});
+
+initChips();
+render();
+
+loadExternalData().then(function (ok) {
+  if (ok) {
+    initChips();
+    initCatSel();
+    render();
+    showDataNote();
+  } else {
+    var note = document.getElementById('dataNote');
+    if (note) note.textContent = '未找到 journals.json，当前为内置备份数据';
+  }
+});
+
+if (location.search.indexOf('demo=1') > -1) {
+  window.DEMO = true;
+  setTimeout(function () {
+    document.getElementById('abs').value = '本研究旨在探讨小檗碱（berberine）对结直肠癌（colorectal cancer）细胞增殖与凋亡的影响及分子机制。MTT 实验表明 berberine 显著抑制 tumor cell 增殖；流式细胞术显示其诱导 apoptosis；Western blot 显示 cleaved caspase-3 上调。裸鼠移植瘤（xenograft）实验证实其抑制 tumor growth。网络药理学与分子对接提示可能通过 PI3K/AKT signaling pathway 发挥作用。';
+    document.getElementById('localBtn').click();
+    document.getElementById('aiBtn').click();
+  }, 400);
+}
+
+/* ===== 正式登录（草稿丙正式版）：邮箱验证码 · 浏览 10 秒自动弹出 ===== */
+(function () {
+  var CFG = {
+    autoPopupDelay: 10000,     // 浏览 10 秒后自动弹出
+    loginKey: 'jh_login_ok',   // localStorage：登录状态（7 天有效）
+    skipKey: 'jh_login_skip'   // sessionStorage：本次浏览已点“暂不登录”
+  };
+  var mask = document.getElementById('loginMask');
+  var emailEl = document.getElementById('lmEmail');
+  var codeEl = document.getElementById('lmCode');
+  var msgEl = document.getElementById('lmMsg');
+  var sendBtn = document.getElementById('lmSendBtn');
+  var userBtn = document.getElementById('lmUserBtn');
+  var fakeCode = '', timer = null;
+
+  function lmMsg(txt, ok) {
+    msgEl.className = 'lm-msg ' + (ok ? 'ok' : 'err');
+    msgEl.textContent = txt;
+  }
+  function validEmail(v) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v || '').trim());
+  }
+  function isLoggedIn() {
+    try {
+      var t = parseInt(localStorage.getItem(CFG.loginKey) || '0', 10);
+      return !!t && (Date.now() - t < 7 * 24 * 3600 * 1000);
+    } catch (e) { return false; }
+  }
+  function showLogin() {
+    if (isLoggedIn() || mask.classList.contains('show')) return;
+    mask.classList.add('show');
+    setTimeout(function () { emailEl.focus(); }, 60);
+  }
+  function hideLogin() { mask.classList.remove('show'); }
+  function stopTimer() { clearInterval(timer); timer = null; }
+  function updateAiLock() {
+    var tag = document.getElementById('aiLockTag');
+    var btn = document.getElementById('aiBtn');
+    if (isLoggedIn()) {
+      if (tag) { tag.textContent = '🔓 已登录 · 可用'; tag.classList.add('on'); }
+      if (btn) btn.classList.remove('locked');
+    } else {
+      if (tag) { tag.textContent = '🔒 登录后可用'; tag.classList.remove('on'); }
+      if (btn) btn.classList.add('locked');
+    }
+  }
+  // 供主脚本使用：登录状态判断 + 弹出登录框
+  window.LOGIN_API = { isLoggedIn: isLoggedIn, showLogin: showLogin, refresh: updateAiLock };
+
+  // 浏览 10 秒后自动弹出（仅一次；未登录且本次未跳过时）
+  setTimeout(function () {
+    try { if (sessionStorage.getItem(CFG.skipKey)) return; } catch (e) {}
+    showLogin();
+  }, CFG.autoPopupDelay);
+
+  // 右上角手动登录入口
+  if (userBtn) userBtn.onclick = showLogin;
+
+  // 关闭 / 跳过 / 点击遮罩关闭
+  document.getElementById('lmClose').onclick = hideLogin;
+  document.getElementById('lmSkip').onclick = function () {
+    try { sessionStorage.setItem(CFG.skipKey, '1'); } catch (e) {}
+    hideLogin();
+  };
+  mask.addEventListener('click', function (e) { if (e.target === mask) hideLogin(); });
+
+  // 发送验证码（当前演示模式：本地生成并显示；接 Supabase 后替换为真实发送）
+  sendBtn.onclick = function () {
+    var email = emailEl.value.trim();
+    if (!validEmail(email)) { lmMsg('请输入正确的邮箱地址', false); return; }
+    fakeCode = String(Math.floor(100000 + Math.random() * 900000));
+    msgEl.className = 'lm-msg ok';
+    msgEl.innerHTML = '验证码已发送至 <b>' + email + '</b><br>（演示验证码：<b>' + fakeCode + '</b>）';
+    var left = 60;
+    sendBtn.disabled = true;
+    sendBtn.textContent = left + 's 后重发';
+    stopTimer();
+    timer = setInterval(function () {
+      left--;
+      if (left <= 0) { stopTimer(); sendBtn.disabled = false; sendBtn.textContent = '获取验证码'; }
+      else sendBtn.textContent = left + 's 后重发';
+    }, 1000);
+  };
+
+  function doLogin() {
+    var email = emailEl.value.trim();
+    var c = codeEl.value.trim();
+    if (!validEmail(email)) { lmMsg('请输入正确的邮箱地址', false); return; }
+    if (!c) { lmMsg('请输入验证码', false); return; }
+    if (c !== fakeCode) { lmMsg('验证码错误，请重新输入', false); return; }
+    lmMsg('✅ 登录成功', true);
+    setTimeout(function () { lmMsg('✅ 登录成功，AI 语义推荐已解锁', true); }, 300);
+    try {
+      localStorage.setItem(CFG.loginKey, String(Date.now()));
+      sessionStorage.removeItem(CFG.skipKey);
+    } catch (e) {}
+    if (userBtn) { userBtn.textContent = '👤 已登录'; userBtn.classList.add('on'); }
+    updateAiLock();
+    setTimeout(hideLogin, 800);
+  }
+  document.getElementById('lmLoginBtn').onclick = doLogin;
+  codeEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') doLogin(); });
+  emailEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') sendBtn.click(); });
+
+  // 页面打开时若已登录，入口直接显示已登录
+  if (isLoggedIn() && userBtn) { userBtn.textContent = '👤 已登录'; userBtn.classList.add('on'); }
+  updateAiLock();
+})();
+</script>
+</body>
+</html>

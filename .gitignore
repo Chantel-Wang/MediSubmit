@@ -1,0 +1,12 @@
+# 密钥与敏感信息（绝不提交）
+智谱Key.txt
+*Key.txt
+.env
+.env.*
+*.log
+local-ai-test/ai_cache.json
+
+# 依赖与系统文件
+node_modules/
+.DS_Store
+Thumbs.db
