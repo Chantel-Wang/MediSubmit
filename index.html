@@ -212,7 +212,21 @@
   .lm-skip:hover { color: #4a6746; text-decoration: underline; }
   .lm-user { margin-left: auto; font-size: 0.74rem; font-weight: 700; color: #4a6746; background: rgba(255,255,255,0.65); border: 1px solid rgba(125,158,119,0.45); border-radius: 999px; padding: 5px 14px; cursor: pointer; font-family: inherit; }
   .lm-user:hover { background: #e8f0e5; }
-  .lm-user.on { color: #8a9f86; cursor: default; }
+  .lm-user.on { color: #4a6746; background: rgba(79,122,74,0.14); }
+  .lm-user-wrap { position: relative; margin-left: auto; }
+  .lm-user-wrap .lm-user { margin-left: 0; }
+  .lm-menu {
+    position: absolute; right: 0; top: calc(100% + 8px); min-width: 220px; z-index: 120;
+    background: #fff; border: 1px solid rgba(125,158,119,0.3); border-radius: 12px;
+    box-shadow: 0 14px 34px rgba(64,84,55,0.18); padding: 8px; display: none;
+  }
+  .lm-menu.show { display: block; }
+  .lm-menu-mail { font-size: 0.72rem; color: #8a9f86; padding: 6px 10px 8px; word-break: break-all; border-bottom: 1px dashed rgba(125,158,119,0.3); margin-bottom: 6px; }
+  .lm-menu-item {
+    display: block; width: 100%; text-align: left; padding: 8px 10px; border: none; background: none;
+    color: #c0392b; font-size: 0.78rem; font-weight: 600; border-radius: 8px; cursor: pointer; font-family: inherit;
+  }
+  .lm-menu-item:hover { background: rgba(192,57,43,0.08); }
 
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -245,7 +259,15 @@
 </div>
 <div class="wrap">
   <div class="head">
-    <h1>🔬 医药科研投稿助手 <button class="lm-user" id="lmUserBtn">👤 登录</button></h1>
+    <h1>🔬 医药科研投稿助手
+      <span class="lm-user-wrap">
+        <button class="lm-user" id="lmUserBtn">👤 登录</button>
+        <div class="lm-menu" id="lmMenu">
+          <div class="lm-menu-mail" id="lmMenuMail"></div>
+          <button class="lm-menu-item" id="lmLogoutBtn">🚪 退出登录</button>
+        </div>
+      </span>
+    </h1>
     <p>覆盖药理学、肿瘤、免疫、药剂/递送、天然产物、临床与 Meta 分析等方向的 SCI 期刊。支持筛选、关键词初筛，以及 <b>AI 语义推荐</b>。</p>
     <span class="warn">⚠ 数据为 AI 整理示例，可能与最新 JCR / 期刊官网有偏差，正式使用前务必逐本核实；AI 推荐理由仅供参考，投稿前请以期刊官网要求为准。</span>
   </div>
@@ -921,6 +943,9 @@ if (location.search.indexOf('demo=1') > -1) {
   var msgEl = document.getElementById('lmMsg');
   var sendBtn = document.getElementById('lmSendBtn');
   var userBtn = document.getElementById('lmUserBtn');
+  var menu = document.getElementById('lmMenu');
+  var menuMail = document.getElementById('lmMenuMail');
+  var userEmail = '';
   var loggedIn = false;
 
   function lmMsg(txt, ok) {
@@ -937,12 +962,16 @@ if (location.search.indexOf('demo=1') > -1) {
       if (tag) { tag.textContent = '🔓 已登录 · 可用'; tag.classList.add('on'); }
       if (btn) btn.classList.remove('locked');
       if (userBtn) { userBtn.textContent = '👤 已登录'; userBtn.classList.add('on'); }
+      if (menuMail) menuMail.textContent = userEmail || '已登录';
     } else {
       if (tag) { tag.textContent = '🔒 登录后可用'; tag.classList.remove('on'); }
       if (btn) btn.classList.add('locked');
       if (userBtn) { userBtn.textContent = '👤 登录'; userBtn.classList.remove('on'); }
+      hideMenu();
     }
   }
+  function showMenu() { if (menu) menu.classList.add('show'); }
+  function hideMenu() { if (menu) menu.classList.remove('show'); }
   function showLogin() {
     if (loggedIn || mask.classList.contains('show')) return;
     mask.classList.add('show');
@@ -959,11 +988,22 @@ if (location.search.indexOf('demo=1') > -1) {
 
   // 恢复已登录会话
   sb.auth.getSession().then(function (r) {
-    if (r && r.data && r.data.session) { loggedIn = true; updateUi(); }
+    if (r && r.data && r.data.session) {
+      loggedIn = true;
+      userEmail = r.data.session.user.email || '';
+      updateUi();
+    }
   });
-  sb.auth.onAuthStateChange(function (event) {
-    if (event === 'SIGNED_IN') loggedIn = true;
-    else if (event === 'SIGNED_OUT') loggedIn = false;
+  sb.auth.onAuthStateChange(function (event, session) {
+    if (event === 'SIGNED_IN') {
+      loggedIn = true;
+      userEmail = (session && session.user && session.user.email) || '';
+      hideLogin();
+    } else if (event === 'SIGNED_OUT') {
+      loggedIn = false;
+      userEmail = '';
+      hideMenu();
+    }
     updateUi();
   });
   // 跨标签页同步：在邮件链接打开的标签页登录后，原标签页自动更新
@@ -971,7 +1011,10 @@ if (location.search.indexOf('demo=1') > -1) {
     if (e.key && e.key.indexOf('sb-') === 0) {
       sb.auth.getSession().then(function (r) {
         loggedIn = !!(r && r.data && r.data.session);
-        if (loggedIn) hideLogin();
+        if (loggedIn) {
+          userEmail = (r.data.session.user && r.data.session.user.email) || '';
+          hideLogin();
+        }
         updateUi();
       });
     }
@@ -983,8 +1026,30 @@ if (location.search.indexOf('demo=1') > -1) {
     showLogin();
   }, CFG.autoPopupDelay);
 
-  // 右上角手动登录入口
-  if (userBtn) userBtn.onclick = showLogin;
+  // 右上角用户区：未登录 → 弹出登录框；已登录 → 展开/收起菜单
+  if (userBtn) userBtn.onclick = function () {
+    if (loggedIn) {
+      if (menu && menu.classList.contains('show')) hideMenu(); else showMenu();
+    } else {
+      showLogin();
+    }
+  };
+  document.addEventListener('click', function (e) {
+    if (e.target.closest && !e.target.closest('.lm-user-wrap')) hideMenu();
+  });
+
+  // 退出登录
+  document.getElementById('lmLogoutBtn').onclick = function () {
+    sb.auth.signOut().then(function () {
+      loggedIn = false;
+      userEmail = '';
+      hideMenu();
+      updateUi();
+    }).catch(function (e) {
+      hideMenu();
+      lmMsg('退出失败：' + (e && e.message ? e.message : e), false);
+    });
+  };
 
   // 关闭 / 跳过 / 点击遮罩关闭
   document.getElementById('lmClose').onclick = hideLogin;
@@ -1036,6 +1101,12 @@ if (location.search.indexOf('demo=1') > -1) {
       if (r.error) { lmMsg('验证失败：' + r.error.message, false); return; }
       loggedIn = true;
       lmMsg('✅ 登录成功，AI 语义推荐已解锁', true);
+      sb.auth.getSession().then(function (sr) {
+        if (sr && sr.data && sr.data.session) {
+          userEmail = sr.data.session.user.email || '';
+          updateUi();
+        }
+      });
       try { sessionStorage.removeItem(CFG.skipKey); } catch (e) {}
       updateUi();
       setTimeout(hideLogin, 900);
