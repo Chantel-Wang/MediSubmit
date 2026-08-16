@@ -224,15 +224,22 @@
     <button class="lm-close" id="lmClose" title="关闭" aria-label="关闭">×</button>
     <div class="lm-logo">🔬</div>
     <h2>登录医药科研投稿助手</h2>
-    <div class="lm-sub">输入邮箱，点击邮件中的链接即可登录</div>
+    <div class="lm-sub">输入邮箱，用邮件里的链接或 6 位验证码登录</div>
     <div class="lm-benefit">🎁 登录后可体验 <b>AI 语义推荐 Top5</b>（约 6~20 秒）</div>
     <div class="lm-field">
       <label>邮箱</label>
       <input class="lm-inp" id="lmEmail" type="email" placeholder="请输入邮箱" autocomplete="email">
     </div>
-    <button class="lm-btn" id="lmSendBtn">发送登录链接</button>
+    <button class="lm-btn" id="lmSendBtn">发送登录链接 / 验证码</button>
+    <div class="lm-field">
+      <label>6 位验证码（在邮件中查看）</label>
+      <div class="lm-row">
+        <input class="lm-inp" id="lmCode" placeholder="6 位验证码" maxlength="6" autocomplete="one-time-code" style="letter-spacing:4px;">
+        <button class="lm-code" id="lmLoginBtn">登 录</button>
+      </div>
+    </div>
     <div class="lm-msg" id="lmMsg"></div>
-    <div class="lm-tip">📧 登录链接将发送到你的邮箱，点击链接即可自动登录；如未收到请检查垃圾箱。</div>
+    <div class="lm-tip">📧 链接与验证码已发送到邮箱：点链接登录，或在电脑网页上输入 6 位验证码登录；如未收到请检查垃圾箱。</div>
     <button class="lm-skip" id="lmSkip">暂不登录，先逛逛 →</button>
   </div>
 </div>
@@ -910,6 +917,7 @@ if (location.search.indexOf('demo=1') > -1) {
   };
   var mask = document.getElementById('loginMask');
   var emailEl = document.getElementById('lmEmail');
+  var codeEl = document.getElementById('lmCode');
   var msgEl = document.getElementById('lmMsg');
   var sendBtn = document.getElementById('lmSendBtn');
   var userBtn = document.getElementById('lmUserBtn');
@@ -1002,21 +1010,41 @@ if (location.search.indexOf('demo=1') > -1) {
       email: email,
       options: { shouldCreateUser: true, emailRedirectTo: redirectTo }
     }).then(function (r) {
-      if (r.error) { lmMsg('发送失败：' + r.error.message, false); sendBtn.disabled = false; sendBtn.textContent = '发送登录链接'; return; }
-      lmMsg('📧 登录链接已发送至 ' + email + '，请打开邮件点击链接登录（如未收到请检查垃圾箱）', true);
+      if (r.error) { lmMsg('发送失败：' + r.error.message, false); sendBtn.disabled = false; sendBtn.textContent = '发送登录链接 / 验证码'; return; }
+      lmMsg('📧 登录链接和验证码已发送至 ' + email + '，请查收邮件（如未收到请检查垃圾箱）', true);
       var left = 60;
       sendBtn.textContent = left + 's 后重发';
       var timer = setInterval(function () {
         left--;
-        if (left <= 0) { clearInterval(timer); sendBtn.disabled = false; sendBtn.textContent = '发送登录链接'; }
+        if (left <= 0) { clearInterval(timer); sendBtn.disabled = false; sendBtn.textContent = '发送登录链接 / 验证码'; }
         else sendBtn.textContent = left + 's 后重发';
       }, 1000);
     }).catch(function (e) {
       lmMsg('发送失败：' + (e && e.message ? e.message : e), false);
       sendBtn.disabled = false;
-      sendBtn.textContent = '发送登录链接';
+      sendBtn.textContent = '发送登录链接 / 验证码';
     }).finally(function () { sending = false; });
   };
+
+  // 用邮件中的 6 位验证码登录（不依赖设备，任何浏览器都能用）
+  function doLogin() {
+    var email = emailEl.value.trim();
+    var c = codeEl.value.trim();
+    if (!validEmail(email)) { lmMsg('请输入正确的邮箱地址', false); return; }
+    if (!c) { lmMsg('请输入邮件中的 6 位验证码', false); return; }
+    sb.auth.verifyOtp({ email: email, token: c, type: 'email' }).then(function (r) {
+      if (r.error) { lmMsg('验证失败：' + r.error.message, false); return; }
+      loggedIn = true;
+      lmMsg('✅ 登录成功，AI 语义推荐已解锁', true);
+      try { sessionStorage.removeItem(CFG.skipKey); } catch (e) {}
+      updateUi();
+      setTimeout(hideLogin, 900);
+    }).catch(function (e) {
+      lmMsg('验证失败：' + (e && e.message ? e.message : e), false);
+    });
+  }
+  document.getElementById('lmLoginBtn').onclick = doLogin;
+  codeEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') doLogin(); });
   emailEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') sendBtn.click(); });
 
   updateUi();
