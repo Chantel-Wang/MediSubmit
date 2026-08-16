@@ -215,6 +215,7 @@
   .lm-user.on { color: #8a9f86; cursor: default; }
 
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <!-- 正式登录弹窗：邮箱验证码 · 浏览 10 秒自动弹出 -->
@@ -905,11 +906,12 @@ if (location.search.indexOf('demo=1') > -1) {
   }, 400);
 }
 
-/* ===== 正式登录（草稿丙正式版）：邮箱验证码 · 浏览 10 秒自动弹出 ===== */
+/* ===== 正式登录：Supabase 邮箱验证码（真实发送邮件）===== */
 (function () {
+  var SUPA_URL = 'https://iywcolqvtljtnjvrsigg.supabase.co';
+  var SUPA_KEY = 'sb_publishable_0TeyKXiOptoUeMimw-lSiw_HLaZ9Sbk';
   var CFG = {
     autoPopupDelay: 10000,     // 浏览 10 秒后自动弹出
-    loginKey: 'jh_login_ok',   // localStorage：登录状态（7 天有效）
     skipKey: 'jh_login_skip'   // sessionStorage：本次浏览已点“暂不登录”
   };
   var mask = document.getElementById('loginMask');
@@ -918,7 +920,7 @@ if (location.search.indexOf('demo=1') > -1) {
   var msgEl = document.getElementById('lmMsg');
   var sendBtn = document.getElementById('lmSendBtn');
   var userBtn = document.getElementById('lmUserBtn');
-  var fakeCode = '', timer = null;
+  var loggedIn = false;
 
   function lmMsg(txt, ok) {
     msgEl.className = 'lm-msg ' + (ok ? 'ok' : 'err');
@@ -927,32 +929,42 @@ if (location.search.indexOf('demo=1') > -1) {
   function validEmail(v) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(v || '').trim());
   }
-  function isLoggedIn() {
-    try {
-      var t = parseInt(localStorage.getItem(CFG.loginKey) || '0', 10);
-      return !!t && (Date.now() - t < 7 * 24 * 3600 * 1000);
-    } catch (e) { return false; }
+  function updateUi() {
+    var tag = document.getElementById('aiLockTag');
+    var btn = document.getElementById('aiBtn');
+    if (loggedIn) {
+      if (tag) { tag.textContent = '🔓 已登录 · 可用'; tag.classList.add('on'); }
+      if (btn) btn.classList.remove('locked');
+      if (userBtn) { userBtn.textContent = '👤 已登录'; userBtn.classList.add('on'); }
+    } else {
+      if (tag) { tag.textContent = '🔒 登录后可用'; tag.classList.remove('on'); }
+      if (btn) btn.classList.add('locked');
+      if (userBtn) { userBtn.textContent = '👤 登录'; userBtn.classList.remove('on'); }
+    }
   }
   function showLogin() {
-    if (isLoggedIn() || mask.classList.contains('show')) return;
+    if (loggedIn || mask.classList.contains('show')) return;
     mask.classList.add('show');
     setTimeout(function () { emailEl.focus(); }, 60);
   }
   function hideLogin() { mask.classList.remove('show'); }
-  function stopTimer() { clearInterval(timer); timer = null; }
-  function updateAiLock() {
-    var tag = document.getElementById('aiLockTag');
-    var btn = document.getElementById('aiBtn');
-    if (isLoggedIn()) {
-      if (tag) { tag.textContent = '🔓 已登录 · 可用'; tag.classList.add('on'); }
-      if (btn) btn.classList.remove('locked');
-    } else {
-      if (tag) { tag.textContent = '🔒 登录后可用'; tag.classList.remove('on'); }
-      if (btn) btn.classList.add('locked');
-    }
+  window.LOGIN_API = { isLoggedIn: function () { return loggedIn; }, showLogin: showLogin, refresh: updateUi };
+
+  if (!window.supabase) {
+    lmMsg('⚠ Supabase 客户端加载失败，请刷新页面重试', false);
+    return;
   }
-  // 供主脚本使用：登录状态判断 + 弹出登录框
-  window.LOGIN_API = { isLoggedIn: isLoggedIn, showLogin: showLogin, refresh: updateAiLock };
+  var sb = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+
+  // 恢复已登录会话
+  sb.auth.getSession().then(function (r) {
+    if (r && r.data && r.data.session) { loggedIn = true; updateUi(); }
+  });
+  sb.auth.onAuthStateChange(function (event) {
+    if (event === 'SIGNED_IN') loggedIn = true;
+    else if (event === 'SIGNED_OUT') loggedIn = false;
+    updateUi();
+  });
 
   // 浏览 10 秒后自动弹出（仅一次；未登录且本次未跳过时）
   setTimeout(function () {
@@ -971,22 +983,33 @@ if (location.search.indexOf('demo=1') > -1) {
   };
   mask.addEventListener('click', function (e) { if (e.target === mask) hideLogin(); });
 
-  // 发送验证码（当前演示模式：本地生成并显示；接 Supabase 后替换为真实发送）
+  // 发送验证码：Supabase 真实发送邮件
+  var sending = false;
   sendBtn.onclick = function () {
     var email = emailEl.value.trim();
     if (!validEmail(email)) { lmMsg('请输入正确的邮箱地址', false); return; }
-    fakeCode = String(Math.floor(100000 + Math.random() * 900000));
-    msgEl.className = 'lm-msg ok';
-    msgEl.innerHTML = '验证码已发送至 <b>' + email + '</b><br>（演示验证码：<b>' + fakeCode + '</b>）';
-    var left = 60;
+    if (sending) return;
+    sending = true;
     sendBtn.disabled = true;
-    sendBtn.textContent = left + 's 后重发';
-    stopTimer();
-    timer = setInterval(function () {
-      left--;
-      if (left <= 0) { stopTimer(); sendBtn.disabled = false; sendBtn.textContent = '获取验证码'; }
-      else sendBtn.textContent = left + 's 后重发';
-    }, 1000);
+    sendBtn.textContent = '发送中…';
+    sb.auth.signInWithOtp({
+      email: email,
+      options: { shouldCreateUser: true }
+    }).then(function (r) {
+      if (r.error) { lmMsg('发送失败：' + r.error.message, false); sendBtn.disabled = false; sendBtn.textContent = '获取验证码'; return; }
+      lmMsg('📧 验证码已发送至 ' + email + '，请查收邮件（如未收到请检查垃圾箱）', true);
+      var left = 60;
+      sendBtn.textContent = left + 's 后重发';
+      var timer = setInterval(function () {
+        left--;
+        if (left <= 0) { clearInterval(timer); sendBtn.disabled = false; sendBtn.textContent = '获取验证码'; }
+        else sendBtn.textContent = left + 's 后重发';
+      }, 1000);
+    }).catch(function (e) {
+      lmMsg('发送失败：' + (e && e.message ? e.message : e), false);
+      sendBtn.disabled = false;
+      sendBtn.textContent = '获取验证码';
+    }).finally(function () { sending = false; });
   };
 
   function doLogin() {
@@ -994,24 +1017,22 @@ if (location.search.indexOf('demo=1') > -1) {
     var c = codeEl.value.trim();
     if (!validEmail(email)) { lmMsg('请输入正确的邮箱地址', false); return; }
     if (!c) { lmMsg('请输入验证码', false); return; }
-    if (c !== fakeCode) { lmMsg('验证码错误，请重新输入', false); return; }
-    lmMsg('✅ 登录成功', true);
-    setTimeout(function () { lmMsg('✅ 登录成功，AI 语义推荐已解锁', true); }, 300);
-    try {
-      localStorage.setItem(CFG.loginKey, String(Date.now()));
-      sessionStorage.removeItem(CFG.skipKey);
-    } catch (e) {}
-    if (userBtn) { userBtn.textContent = '👤 已登录'; userBtn.classList.add('on'); }
-    updateAiLock();
-    setTimeout(hideLogin, 800);
+    sb.auth.verifyOtp({ email: email, token: c, type: 'email' }).then(function (r) {
+      if (r.error) { lmMsg('验证失败：' + r.error.message, false); return; }
+      loggedIn = true;
+      lmMsg('✅ 登录成功，AI 语义推荐已解锁', true);
+      try { sessionStorage.removeItem(CFG.skipKey); } catch (e) {}
+      updateUi();
+      setTimeout(hideLogin, 900);
+    }).catch(function (e) {
+      lmMsg('验证失败：' + (e && e.message ? e.message : e), false);
+    });
   }
   document.getElementById('lmLoginBtn').onclick = doLogin;
   codeEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') doLogin(); });
   emailEl.addEventListener('keydown', function (e) { if (e.key === 'Enter') sendBtn.click(); });
 
-  // 页面打开时若已登录，入口直接显示已登录
-  if (isLoggedIn() && userBtn) { userBtn.textContent = '👤 已登录'; userBtn.classList.add('on'); }
-  updateAiLock();
+  updateUi();
 })();
 </script>
 </body>
