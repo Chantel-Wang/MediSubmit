@@ -224,7 +224,7 @@
     <button class="lm-close" id="lmClose" title="关闭" aria-label="关闭">×</button>
     <div class="lm-logo">🔬</div>
     <h2>登录医药科研投稿助手</h2>
-    <div class="lm-sub">输入邮箱，用邮件里的链接或 6 位验证码登录</div>
+    <div class="lm-sub">输入邮箱，用邮件里的链接或验证码登录</div>
     <div class="lm-benefit">🎁 登录后可体验 <b>AI 语义推荐 Top5</b>（约 6~20 秒）</div>
     <div class="lm-field">
       <label>邮箱</label>
@@ -232,14 +232,14 @@
     </div>
     <button class="lm-btn" id="lmSendBtn">发送登录链接 / 验证码</button>
     <div class="lm-field">
-      <label>6 位验证码（在邮件中查看）</label>
+      <label>验证码（在邮件中查看）</label>
       <div class="lm-row">
-        <input class="lm-inp" id="lmCode" placeholder="6 位验证码" maxlength="6" autocomplete="one-time-code" style="letter-spacing:4px;">
+        <input class="lm-inp" id="lmCode" placeholder="输入邮件中的验证码" maxlength="8" autocomplete="one-time-code" style="letter-spacing:4px;">
         <button class="lm-code" id="lmLoginBtn">登 录</button>
       </div>
     </div>
     <div class="lm-msg" id="lmMsg"></div>
-    <div class="lm-tip">📧 链接与验证码已发送到邮箱：点链接登录，或在电脑网页上输入 6 位验证码登录；如未收到请检查垃圾箱。</div>
+    <div class="lm-tip">📧 链接与验证码已发送到邮箱：点链接登录，或在电脑网页上输入邮件中的验证码登录；如未收到请检查垃圾箱。</div>
     <button class="lm-skip" id="lmSkip">暂不登录，先逛逛 →</button>
   </div>
 </div>
@@ -1031,7 +1031,7 @@ if (location.search.indexOf('demo=1') > -1) {
     var email = emailEl.value.trim();
     var c = codeEl.value.trim();
     if (!validEmail(email)) { lmMsg('请输入正确的邮箱地址', false); return; }
-    if (!c) { lmMsg('请输入邮件中的 6 位验证码', false); return; }
+    if (!c) { lmMsg('请输入邮件中的验证码', false); return; }
     sb.auth.verifyOtp({ email: email, token: c, type: 'email' }).then(function (r) {
       if (r.error) { lmMsg('验证失败：' + r.error.message, false); return; }
       loggedIn = true;
